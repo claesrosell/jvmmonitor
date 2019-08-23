@@ -8,7 +8,7 @@
 <feature
       id="org.jvmmonitor"
       label="%featureName"
-      version="3.8.1.qualifier"
+      version="3.8.2.qualifier"
       provider-name="%providerName"
       plugin="org.jvmmonitor.ui">
 
@@ -38,7 +38,7 @@
          id="org.jvmmonitor.tools"
          download-size="0"
          install-size="0"
-         version="3.8.1.qualifier"
+         version="3.8.2.qualifier"
          unpack="false"/>
 
    <plugin

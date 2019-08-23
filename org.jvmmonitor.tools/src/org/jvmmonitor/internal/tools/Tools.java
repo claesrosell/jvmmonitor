@@ -302,8 +302,22 @@ public class Tools implements IPropertyChangeListener, IConstants {
      */
     protected void invokeLoadAgent(Object virtualMachine, String path,
             String options) throws JvmCoreException {
+
+    	/* Checking for newer way to start local management agent */
         try {
             Class<?> clazz = Class.forName(VIRTUAL_MACHINE_CLASS);
+            Method method = clazz.getDeclaredMethod(START_LOCAL_MANAGEMENT_AGENT_METHOD,
+                    new Class[] { });
+            if ( method != null ) {
+                method.invoke(virtualMachine);
+                return;
+            }
+        } catch (Throwable t) {
+
+        }
+ 
+        try {
+            Class<?> clazz = Class.forName(VIRTUAL_MACHINE_CLASS);            
             Method method = clazz.getDeclaredMethod(LOAD_AGENT_METHOD,
                     new Class[] { String.class, String.class });
             method.invoke(virtualMachine, path, options);

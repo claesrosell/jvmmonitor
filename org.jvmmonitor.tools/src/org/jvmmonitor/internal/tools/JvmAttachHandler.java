@@ -256,12 +256,12 @@ public class JvmAttachHandler implements IJvmAttachHandler,
 
             File file = new File(javaHome + IConstants.MANAGEMENT_AGENT_JAR);
 
-            if (!file.exists()) {
-                String message = NLS.bind(Messages.fileNotFoundMsg,
-                        file.getPath());
-                throw new JvmCoreException(IStatus.ERROR, message,
-                        new Exception());
-            }
+//            if (!file.exists()) {
+//                String message = NLS.bind(Messages.fileNotFoundMsg,
+//                        file.getPath());
+//                throw new JvmCoreException(IStatus.ERROR, message,
+//                        new Exception());
+//            }
 
             tools.invokeLoadAgent(virtualMachine, file.getAbsolutePath(),
                     IConstants.JMX_REMOTE_AGENT);
