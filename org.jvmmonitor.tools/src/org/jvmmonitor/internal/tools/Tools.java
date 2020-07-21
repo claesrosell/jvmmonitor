@@ -321,7 +321,7 @@ public class Tools implements IPropertyChangeListener, IConstants {
             }
 
             // quick workaround to be refined later
-            if ("Non-numeric value found - int expected".equals(message)) {
+            if ("Non-numeric value found - int expected".equals(message) || "0".equals(message)) {
                 return;
             }
             throw new JvmCoreException(IStatus.ERROR, message, t);

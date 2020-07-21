@@ -1019,40 +1019,40 @@ public class MBeanServer implements IMBeanServer {
 
         String[] lines = heap.split("\n"); //$NON-NLS-1$
         for (String line : lines) {
-            Scanner scanner = new Scanner(line);
-            if (!scanner.hasNext()) {
-                continue;
-            }
-            scanner.next();
-            if (!scanner.hasNextLong()) {
-                continue;
-            }
-            long count = scanner.nextLong();
-            if (!scanner.hasNextLong()) {
-                continue;
-            }
-            long size = scanner.nextLong();
-            if (scanner.hasNext()) {
-                String className = scanner.next();
-                if (className.startsWith("<")) { //$NON-NLS-1$
+            try (Scanner scanner = new Scanner(line)) {
+                if (!scanner.hasNext()) {
                     continue;
                 }
-                className = convertClassName(className);
-
-                HeapElement oldElement = heapListElements.get(className);
-                if (oldElement == null) {
-                    newHeapElements.put(className, new HeapElement(className,
-                            size, count));
-                } else {
-                    // WORKAROUND heap from target JVM has a
-                    // duplicated entry...
-                    if (!newHeapElements.containsKey(className)) {
-                        oldElement.setSizeAndCount(size, count);
-                        newHeapElements.put(className, oldElement);
-                    }
+                scanner.next();
+                if (!scanner.hasNextLong()) {
+                    continue;
                 }
-                if (newHeapElements.size() >= maxNumberOfClasses) {
-                    break;
+                long count = scanner.nextLong();
+                if (!scanner.hasNextLong()) {
+                    continue;
+                }
+                long size = scanner.nextLong();
+                if (scanner.hasNext()) {
+                    String className = scanner.next();
+                    if (className.startsWith("<")) { //$NON-NLS-1$
+                        continue;
+                    }
+                    className = convertClassName(className);
+
+                    HeapElement oldElement = heapListElements.get(className);
+                    if (oldElement == null) {
+                        newHeapElements.put(className, new HeapElement(className, size, count));
+                    } else {
+                        // WORKAROUND heap from target JVM has a
+                        // duplicated entry...
+                        if (!newHeapElements.containsKey(className)) {
+                            oldElement.setSizeAndCount(size, count);
+                            newHeapElements.put(className, oldElement);
+                        }
+                    }
+                    if (newHeapElements.size() >= maxNumberOfClasses) {
+                        break;
+                    }
                 }
             }
         }

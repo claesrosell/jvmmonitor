@@ -257,11 +257,18 @@ public class JvmAttachHandler implements IJvmAttachHandler,
             // management-agent.jar is available only in Java 8 or earlier (see JDK-8179063) 
             File file = new File(javaHome + IConstants.MANAGEMENT_AGENT_JAR);
             if (file.exists()) {
-				tools.invokeLoadAgent(virtualMachine, file.getAbsolutePath(),
-				        IConstants.JMX_REMOTE_AGENT);
-			} else {
-			    tools.invokeStartLocalManagementAgent(virtualMachine);
+                try {
+                    tools.invokeLoadAgent(virtualMachine, file.getAbsolutePath(), IConstants.JMX_REMOTE_AGENT);
+                } catch (JvmCoreException e) {
+                    // ignore and continue
+                }
 			}
+
+            try {
+                tools.invokeStartLocalManagementAgent(virtualMachine);
+            } catch (JvmCoreException e) {
+                // ignore and continue
+            }
 
             Properties props = tools.invokeGetAgentProperties(virtualMachine);
             url = (String) props.get(LOCAL_CONNECTOR_ADDRESS);
