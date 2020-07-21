@@ -319,7 +319,29 @@ public class Tools implements IPropertyChangeListener, IConstants {
                     cause = cause.getCause();
                 }
             }
+
+            // quick workaround to be refined later
+            if ("Non-numeric value found - int expected".equals(message)) {
+                return;
+            }
             throw new JvmCoreException(IStatus.ERROR, message, t);
+        }
+    }
+
+    /**
+     * Invokes the startLocalManagementAgent method of VirtualMachine with
+     * reflection.
+     * 
+     * @param vm The virtual machine
+     * @throws JvmCoreException
+     */
+    protected void invokeStartLocalManagementAgent(Object vm) throws JvmCoreException {
+        try {
+            Class<?> clazz = Class.forName(VIRTUAL_MACHINE_CLASS);
+            Method method = clazz.getDeclaredMethod(GET_START_LOCAL_MANAGEMENT_AGENT_METHOD);
+            method.invoke(vm);
+        } catch (Throwable t) {
+            throw new JvmCoreException(IStatus.ERROR, t.getMessage(), t);
         }
     }
 

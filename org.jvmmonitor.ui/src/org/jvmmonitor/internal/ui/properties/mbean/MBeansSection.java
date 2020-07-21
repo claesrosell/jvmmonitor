@@ -6,6 +6,8 @@
  *******************************************************************************/
 package org.jvmmonitor.internal.ui.properties.mbean;
 
+import static org.jvmmonitor.internal.ui.IConstants.*;
+
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
@@ -90,11 +92,11 @@ public class MBeansSection extends AbstractJvmPropertySection {
      */
     @Override
     protected void addToolBarActions(IToolBarManager manager) {
-        if (manager.find("separator") == null) { //$NON-NLS-1$
-            manager.insertAfter("defaults", new Separator("separator")); //$NON-NLS-1$ //$NON-NLS-2$
+        if (manager.find(SEPARATOR_ID) == null) {
+            manager.add(new Separator(SEPARATOR_ID));
         }
         if (manager.find(refreshAction.getId()) == null) {
-            manager.insertAfter("defaults", refreshAction); //$NON-NLS-1$
+            manager.insertAfter(SEPARATOR_ID, refreshAction);
         }
     }
 
@@ -103,7 +105,7 @@ public class MBeansSection extends AbstractJvmPropertySection {
      */
     @Override
     protected void removeToolBarActions(IToolBarManager manager) {
-        manager.remove("separator"); //$NON-NLS-1$
+        manager.remove(SEPARATOR_ID);
         manager.remove(refreshAction.getId());
     }
 

@@ -13,7 +13,7 @@ package org.jvmmonitor.internal.agent;
 public class Messages {
 
     /** The error message that registering CpuProfilerMXBean failed. */
-    static final String CANNOT_REGISTER_CPU_PROFILER_MXBEAN = "Cannot not register CpuBciProfilerMXBean.";
+    static final String CANNOT_REGISTER_CPU_PROFILER_MXBEAN = "Cannot register CpuBciProfilerMXBean.";
 
     /** The error message that opening configuration file failed. */
     static final String CANNOT_OPEN_CONFIG_FILE = "Cannot open the specified configuration file:\n\t%s\n";

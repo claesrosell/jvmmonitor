@@ -6,6 +6,8 @@
  *******************************************************************************/
 package org.jvmmonitor.internal.ui.properties.memory;
 
+import static org.jvmmonitor.internal.ui.IConstants.*;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IMenuManager;
@@ -263,14 +265,14 @@ public class SWTResourcesPage extends AbstractSashForm {
      *            The tool bar manager
      */
     void addToolBarActions(IToolBarManager manager) {
-        if (manager.find("separator2") == null) { //$NON-NLS-1$
-            manager.insertAfter("defaults", new Separator("separator2")); //$NON-NLS-1$ //$NON-NLS-2$
+        if (manager.find(SEPARATOR_ID) == null) {
+            manager.add(new Separator(SEPARATOR_ID));
         }
         if (manager.find(refreshAction.getId()) == null) {
-            manager.insertAfter("defaults", refreshAction); //$NON-NLS-1$
+            manager.insertAfter(SEPARATOR_ID, refreshAction);
         }
         if (manager.find(clearSWTResourceAction.getId()) == null) {
-            manager.insertAfter("defaults", clearSWTResourceAction); //$NON-NLS-1$
+            manager.insertAfter(SEPARATOR_ID, clearSWTResourceAction);
         }
     }
 
@@ -281,7 +283,7 @@ public class SWTResourcesPage extends AbstractSashForm {
      *            The tool bar manager
      */
     void removeToolBarActions(IToolBarManager manager) {
-        manager.remove("separator2"); //$NON-NLS-1$
+        manager.remove(SEPARATOR_ID);
         manager.remove(refreshAction.getId());
         manager.remove(clearSWTResourceAction.getId());
     }

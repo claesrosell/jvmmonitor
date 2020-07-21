@@ -132,7 +132,4 @@ public final class Messages extends NLS {
 
     /** */
     public static String getMainClassNameFailed;
-
-    /** */
-    public static String fileNotFoundMsg;
 }

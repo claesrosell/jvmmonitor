@@ -15,6 +15,7 @@ import java.util.Set;
 import javax.management.JMException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+import javax.management.RuntimeMBeanException;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.osgi.util.NLS;
@@ -75,14 +76,24 @@ public class OverviewProperties {
      */
     private void refreshPropertyValues() {
         for (List<OverviewProperty> properties : overviewProperties.values()) {
+            List<OverviewProperty> unsupportedProperties = new ArrayList<>();
             for (OverviewProperty property : properties) {
                 try {
                     ObjectName objectName = ObjectName.getInstance(property
                             .getObjectName());
                     String attributeName = property.getAttributeName();
-
-                    Object attribute = activeJvm.getMBeanServer().getAttribute(
-                            objectName, attributeName);
+                    Object attribute;
+                    try {
+                        attribute = activeJvm.getMBeanServer().getAttribute(objectName, attributeName);
+                    } catch (RuntimeMBeanException e) {
+                        Throwable cause = e.getCause();
+                        if (cause instanceof UnsupportedOperationException) {
+                            unsupportedProperties.add(property);
+                        } else {
+                            Activator.log(IStatus.ERROR, Messages.getMBeanAttributeFailedMsg, e);
+                        }
+                        continue;
+                    }
 
                     property.setValue(attribute);
                 } catch (JvmCoreException e) {
@@ -92,6 +103,7 @@ public class OverviewProperties {
                             Messages.getMBeanAttributeFailedMsg, e);
                 }
             }
+            properties.removeAll(unsupportedProperties);
         }
     }
 

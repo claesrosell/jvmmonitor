@@ -9,6 +9,7 @@ package org.jvmmonitor.internal.ui.views;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -50,7 +51,7 @@ public class StartMonitoringAction extends Action implements
      * The constructor.
      */
     public StartMonitoringAction() {
-        jvms = new ArrayList<IActiveJvm>();
+        jvms = new CopyOnWriteArrayList<IActiveJvm>();
         visible = false;
 
         setText(Messages.startMonitoringLabel);

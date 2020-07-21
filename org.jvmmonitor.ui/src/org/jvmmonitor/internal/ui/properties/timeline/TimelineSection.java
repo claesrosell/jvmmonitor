@@ -6,6 +6,8 @@
  *******************************************************************************/
 package org.jvmmonitor.internal.ui.properties.timeline;
 
+import static org.jvmmonitor.internal.ui.IConstants.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -206,30 +208,30 @@ public class TimelineSection extends AbstractJvmPropertySection {
      */
     @Override
     protected void addToolBarActions(IToolBarManager manager) {
-        if (manager.find("separator") == null) { //$NON-NLS-1$
-            manager.insertAfter("defaults", new Separator("separator")); //$NON-NLS-1$ //$NON-NLS-2$
-        }
-        if (manager.find(refreshAction.getId()) == null) {
-            manager.insertAfter("defaults", refreshAction); //$NON-NLS-1$
-        }
-        if (manager.find(clearAction.getId()) == null) {
-            manager.insertAfter("defaults", clearAction); //$NON-NLS-1$
-        }
-        if (manager.find(newChartAction.getId()) == null) {
-            manager.insertAfter("defaults", newChartAction); //$NON-NLS-1$
-        }
-    }
+		if (manager.find(SEPARATOR_ID) == null) {
+			manager.add(new Separator(SEPARATOR_ID));
+		}
+		if (manager.find(refreshAction.getId()) == null) {
+			manager.insertAfter(SEPARATOR_ID, refreshAction); // $NON-NLS-1$
+		}
+		if (manager.find(clearAction.getId()) == null) {
+			manager.insertAfter(SEPARATOR_ID, clearAction); // $NON-NLS-1$
+		}
+		if (manager.find(newChartAction.getId()) == null) {
+			manager.insertAfter(SEPARATOR_ID, newChartAction); // $NON-NLS-1$
+		}
+	}
 
-    /*
-     * @see AbstractJvmPropertySection#removeToolBarActions(IToolBarManager)
-     */
-    @Override
-    protected void removeToolBarActions(IToolBarManager manager) {
-        manager.remove("separator"); //$NON-NLS-1$
-        manager.remove(refreshAction.getId());
-        manager.remove(clearAction.getId());
-        manager.remove(newChartAction.getId());
-    }
+	/*
+	 * @see AbstractJvmPropertySection#removeToolBarActions(IToolBarManager)
+	 */
+	@Override
+	protected void removeToolBarActions(IToolBarManager manager) {
+		manager.remove(SEPARATOR_ID);
+		manager.remove(refreshAction.getId());
+		manager.remove(clearAction.getId());
+		manager.remove(newChartAction.getId());
+	}
 
     /*
      * @see AbstractJvmPropertySection#addLocalMenus(IMenuManager)
@@ -239,13 +241,13 @@ public class TimelineSection extends AbstractJvmPropertySection {
         if (manager.find(saveChartSetAsAction.getId()) == null) {
             manager.add(saveChartSetAsAction);
         }
-        if (manager.find(loadChartSetAction.getId()) == null) {
-            manager.add(loadChartSetAction);
-        }
-        if (manager.find("separator") == null) { //$NON-NLS-1$
-            manager.add(new Separator("separator")); //$NON-NLS-1$
-        }
-    }
+		if (manager.find(loadChartSetAction.getId()) == null) {
+			manager.add(loadChartSetAction);
+		}
+		if (manager.find(SEPARATOR_ID) == null) {
+			manager.add(new Separator(SEPARATOR_ID));
+		}
+	}
 
     /*
      * @see AbstractJvmPropertySection#removeLocalMenus(IMenuManager)
@@ -254,7 +256,7 @@ public class TimelineSection extends AbstractJvmPropertySection {
     protected void removeLocalMenus(IMenuManager manager) {
         manager.remove(saveChartSetAsAction.getId());
         manager.remove(loadChartSetAction.getId());
-        manager.remove("separator"); //$NON-NLS-1$
+        manager.remove(SEPARATOR_ID);
     }
 
     /*

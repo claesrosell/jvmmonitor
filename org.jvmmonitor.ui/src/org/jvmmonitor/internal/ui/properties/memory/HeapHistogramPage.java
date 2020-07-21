@@ -6,6 +6,8 @@
  *******************************************************************************/
 package org.jvmmonitor.internal.ui.properties.memory;
 
+import static org.jvmmonitor.internal.ui.IConstants.*;
+
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.lang.management.RuntimeMXBean;
@@ -280,23 +282,23 @@ public class HeapHistogramPage extends Composite implements
      *            The tool bar manager
      */
     void addToolBarActions(IToolBarManager manager) {
-        if (manager.find("separator") == null) { //$NON-NLS-1$
-            manager.insertAfter("defaults", new Separator("separator")); //$NON-NLS-1$ //$NON-NLS-2$
+        if (manager.find(SEPARATOR_ID) == null) {
+            manager.add(new Separator(SEPARATOR_ID));
         }
         if (manager.find(refreshAction.getId()) == null) {
-            manager.insertAfter("defaults", refreshAction); //$NON-NLS-1$
+            manager.insertAfter(SEPARATOR_ID, refreshAction);
         }
         if (manager.find(garbageCollectorAction.getId()) == null) {
-            manager.insertAfter("defaults", garbageCollectorAction); //$NON-NLS-1$
+            manager.insertAfter(SEPARATOR_ID, garbageCollectorAction);
         }
         if (manager.find(clearHeapDeltaAction.getId()) == null) {
-            manager.insertAfter("defaults", clearHeapDeltaAction); //$NON-NLS-1$
+            manager.insertAfter(SEPARATOR_ID, clearHeapDeltaAction);
         }
         if (manager.find(dumpHeapAction.getId()) == null) {
-            manager.insertAfter("defaults", dumpHeapAction); //$NON-NLS-1$
+            manager.insertAfter(SEPARATOR_ID, dumpHeapAction);
         }
         if (manager.find(dumpHprofAction.getId()) == null) {
-            manager.insertAfter("defaults", dumpHprofAction); //$NON-NLS-1$
+            manager.insertAfter(SEPARATOR_ID, dumpHprofAction);
         }
     }
 
@@ -307,7 +309,7 @@ public class HeapHistogramPage extends Composite implements
      *            The tool bar manager
      */
     void removeToolBarActions(IToolBarManager manager) {
-        manager.remove("separator"); //$NON-NLS-1$
+        manager.remove(SEPARATOR_ID);
         manager.remove(refreshAction.getId());
         manager.remove(garbageCollectorAction.getId());
         manager.remove(clearHeapDeltaAction.getId());

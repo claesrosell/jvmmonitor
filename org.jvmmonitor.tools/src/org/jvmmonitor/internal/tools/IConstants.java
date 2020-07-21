@@ -83,6 +83,9 @@ public interface IConstants {
     /** The method name for VirtualMachine#getAgentProperties(). */
     static final String GET_AGENT_PROPERTIES_METHOD = "getAgentProperties";
 
+    /** The method name for VirtualMachine#startLocalManagementAgent(). */
+    static final String GET_START_LOCAL_MANAGEMENT_AGENT_METHOD = "startLocalManagementAgent";
+    
     /** The method name for URLClassLoader#addURL(). */
     static final String ADD_URL_METHOD = "addURL";
 

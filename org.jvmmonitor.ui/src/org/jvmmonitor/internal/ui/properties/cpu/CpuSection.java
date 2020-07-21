@@ -6,6 +6,8 @@
  *******************************************************************************/
 package org.jvmmonitor.internal.ui.properties.cpu;
 
+import static org.jvmmonitor.internal.ui.IConstants.*;
+
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -210,20 +212,20 @@ public class CpuSection extends AbstractJvmPropertySection implements
         suspendCpuProfilingAction.setEnabled(false);
         resumeCpuProfilingAction.setEnabled(false);
         clearCpuProfilingDataAction.setEnabled(false);
-        if (manager.find("separator") == null) { //$NON-NLS-1$
-            manager.insertAfter("defaults", new Separator("separator")); //$NON-NLS-1$ //$NON-NLS-2$
+        if (manager.find(SEPARATOR_ID) == null) {
+            manager.add(new Separator(SEPARATOR_ID));
         }
         if (manager.find(clearCpuProfilingDataAction.getId()) == null) {
-            manager.insertAfter("defaults", clearCpuProfilingDataAction); //$NON-NLS-1$
+            manager.insertAfter(SEPARATOR_ID, clearCpuProfilingDataAction);
         }
         if (manager.find(suspendCpuProfilingAction.getId()) == null) {
-            manager.insertAfter("defaults", suspendCpuProfilingAction); //$NON-NLS-1$
+            manager.insertAfter(SEPARATOR_ID, suspendCpuProfilingAction);
         }
         if (manager.find(resumeCpuProfilingAction.getId()) == null) {
-            manager.insertAfter("defaults", resumeCpuProfilingAction); //$NON-NLS-1$
+            manager.insertAfter(SEPARATOR_ID, resumeCpuProfilingAction);
         }
         if (manager.find(dumpCpuProfilingDataAction.getId()) == null) {
-            manager.insertAfter("defaults", dumpCpuProfilingDataAction); //$NON-NLS-1$
+            manager.insertAfter(SEPARATOR_ID, dumpCpuProfilingDataAction);
         }
     }
 
@@ -236,7 +238,7 @@ public class CpuSection extends AbstractJvmPropertySection implements
         manager.remove(resumeCpuProfilingAction.getId());
         manager.remove(clearCpuProfilingDataAction.getId());
         manager.remove(dumpCpuProfilingDataAction.getId());
-        manager.remove("separator"); //$NON-NLS-1$
+        manager.remove(SEPARATOR_ID);
     }
 
     /*

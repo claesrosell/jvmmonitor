@@ -64,4 +64,7 @@ public interface IConstants {
     static final String PROFILER_TYPE_KEY = Activator.getDefault().getBundle()
             .getSymbolicName()
             + ".profilerType";
+
+    /** The separator ID. */
+    static final String SEPARATOR_ID = "org.jvmmonitor.separator"; //$NON-NLS-1$
 }

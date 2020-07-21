@@ -254,17 +254,14 @@ public class JvmAttachHandler implements IJvmAttachHandler,
                     .invokeGetSystemProperties(virtualMachine))
                     .getProperty(IConstants.JAVA_HOME_PROPERTY_KEY);
 
+            // management-agent.jar is available only in Java 8 or earlier (see JDK-8179063) 
             File file = new File(javaHome + IConstants.MANAGEMENT_AGENT_JAR);
-
-            if (!file.exists()) {
-                String message = NLS.bind(Messages.fileNotFoundMsg,
-                        file.getPath());
-                throw new JvmCoreException(IStatus.ERROR, message,
-                        new Exception());
-            }
-
-            tools.invokeLoadAgent(virtualMachine, file.getAbsolutePath(),
-                    IConstants.JMX_REMOTE_AGENT);
+            if (file.exists()) {
+				tools.invokeLoadAgent(virtualMachine, file.getAbsolutePath(),
+				        IConstants.JMX_REMOTE_AGENT);
+			} else {
+			    tools.invokeStartLocalManagementAgent(virtualMachine);
+			}
 
             Properties props = tools.invokeGetAgentProperties(virtualMachine);
             url = (String) props.get(LOCAL_CONNECTOR_ADDRESS);

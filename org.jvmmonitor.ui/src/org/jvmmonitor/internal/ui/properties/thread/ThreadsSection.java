@@ -6,6 +6,8 @@
  *******************************************************************************/
 package org.jvmmonitor.internal.ui.properties.thread;
 
+import static org.jvmmonitor.internal.ui.IConstants.*;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IMenuManager;
@@ -124,14 +126,14 @@ public class ThreadsSection extends AbstractJvmPropertySection {
      */
     @Override
     protected void addToolBarActions(IToolBarManager manager) {
-        if (manager.find(refreshAction.getId()) == null) {
-            manager.insertAfter("defaults", new Separator("separator")); //$NON-NLS-1$ //$NON-NLS-2$
+        if (manager.find(SEPARATOR_ID) == null) {
+            manager.add(new Separator(SEPARATOR_ID));
         }
         if (manager.find(refreshAction.getId()) == null) {
-            manager.insertAfter("defaults", refreshAction); //$NON-NLS-1$
+            manager.insertAfter(SEPARATOR_ID, refreshAction);
         }
         if (manager.find(dumpThreadsAction.getId()) == null) {
-            manager.insertAfter("defaults", dumpThreadsAction); //$NON-NLS-1$
+            manager.insertAfter(SEPARATOR_ID, dumpThreadsAction);
         }
     }
 
@@ -140,7 +142,7 @@ public class ThreadsSection extends AbstractJvmPropertySection {
      */
     @Override
     protected void removeToolBarActions(IToolBarManager manager) {
-        manager.remove("separator"); //$NON-NLS-1$
+        manager.remove(SEPARATOR_ID);
         manager.remove(refreshAction.getId());
         manager.remove(dumpThreadsAction.getId());
     }

@@ -58,7 +58,7 @@ abstract public class AbstractJvmPropertySection extends
 
     /** The URL for FAQ page. */
     private static final String FAQ_URL = "/org.jvmmonitor.doc/faq.html#Cannot_Connect_to_JVM"; //$NON-NLS-1$
-
+    
     /** The page book. */
     private PageBook pageBook;
 
