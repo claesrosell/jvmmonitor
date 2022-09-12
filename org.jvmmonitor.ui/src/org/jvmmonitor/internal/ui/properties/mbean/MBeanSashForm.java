@@ -57,7 +57,7 @@ public class MBeanSashForm extends AbstractSashForm {
      *            The property section
      */
     public MBeanSashForm(Composite parent, AbstractJvmPropertySection section) {
-        super(parent, section.getActionBars(), SASH_WEIGHTS);
+        super(parent, SASH_WEIGHTS);
         this.section = section;
 
         createSashFormControls(this, section.getActionBars());

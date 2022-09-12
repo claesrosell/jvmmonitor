@@ -15,7 +15,7 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.part.EditorActionBarContributor;
 import org.jvmmonitor.internal.ui.actions.ToggleOrientationAction;
 import org.jvmmonitor.internal.ui.actions.ToggleOrientationAction.Orientation;
-import org.jvmmonitor.internal.ui.properties.thread.ThreadSashForm;
+import org.jvmmonitor.internal.ui.properties.thread.ThreadsPage;
 
 /**
  * The action bar contributor for thread dump editor.
@@ -56,9 +56,9 @@ public class ThreadDumpEditorActionContributor extends
         }
 
         ThreadDumpEditor threadDump = (ThreadDumpEditor) targetEditor;
-        ThreadSashForm sashForm = threadDump.getThreadSashForm();
+        ThreadsPage threadsPage = threadDump.getThreadsPage();
         for (ToggleOrientationAction action : orientationActions) {
-            action.setSashForm(sashForm);
+            action.setSashForm(threadsPage);
             if (action.isChecked()) {
                 action.run();
             }

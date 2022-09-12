@@ -92,4 +92,12 @@ public interface IThreadElement extends IStackTraceProvider {
      * @return The CPU usage in percentage
      */
     double getCpuUsage();
+
+    /**
+     * Gets scheduling rules <tt>ISchedulingRule</tt> held by this thread, separated
+     * by comma.
+     * 
+     * @return The scheduling rules held by this thread
+     */
+    String getSchedulingRules();
 }

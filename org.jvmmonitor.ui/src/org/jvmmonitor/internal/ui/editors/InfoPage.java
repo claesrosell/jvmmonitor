@@ -181,7 +181,7 @@ public class InfoPage extends Composite {
     protected void refresh(IProfileInfo info) {
         if (info == null || dateText == null || mainClassText == null
                 || pidText == null || hostnameText == null
-                || argumentsText == null) {
+                || argumentsText == null || isDisposed()) {
             return;
         }
 

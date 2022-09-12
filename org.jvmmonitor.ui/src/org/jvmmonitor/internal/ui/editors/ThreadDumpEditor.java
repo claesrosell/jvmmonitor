@@ -7,6 +7,7 @@
 package org.jvmmonitor.internal.ui.editors;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +18,12 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.action.IContributionItem;
+import org.eclipse.jface.action.IStatusLineManager;
+import org.eclipse.jface.action.StatusLineContributionItem;
+import org.eclipse.jface.dialogs.IPageChangedListener;
+import org.eclipse.jface.dialogs.PageChangedEvent;
+import org.eclipse.jface.util.Util;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorInput;
@@ -25,11 +32,14 @@ import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.FileStoreEditorInput;
+import org.jvmmonitor.core.IEclipseJobElement;
 import org.jvmmonitor.core.IThreadElement;
 import org.jvmmonitor.core.dump.ThreadDumpParser;
 import org.jvmmonitor.internal.ui.IHelpContextIds;
+import org.jvmmonitor.internal.ui.properties.thread.EclipseJobsPage;
+import org.jvmmonitor.internal.ui.properties.thread.IEclipseJobInput;
 import org.jvmmonitor.internal.ui.properties.thread.IThreadInput;
-import org.jvmmonitor.internal.ui.properties.thread.ThreadSashForm;
+import org.jvmmonitor.internal.ui.properties.thread.ThreadsPage;
 import org.jvmmonitor.ui.Activator;
 import org.jvmmonitor.ui.ISharedImages;
 import org.xml.sax.SAXException;
@@ -39,20 +49,24 @@ import org.xml.sax.SAXException;
  */
 public class ThreadDumpEditor extends AbstractDumpEditor {
 
-    /** The thread sash form. */
-    ThreadSashForm threadSashForm;
+    private ThreadsPage threadsPage;
 
-    /** The thread list elements. */
-    List<IThreadElement> threadListElements;
+    private EclipseJobsPage jobsPage;
 
-    /** The thread image. */
+    private List<IThreadElement> threadListElements;
+
+    private List<IEclipseJobElement> eclipseJobElements;
+
     private Image threadImage;
+
+    private Image jobImage;
 
     /**
      * The constructor.
      */
     public ThreadDumpEditor() {
-        threadListElements = new ArrayList<IThreadElement>();
+        threadListElements = new ArrayList<>();
+        eclipseJobElements = new ArrayList<>();
     }
 
     /*
@@ -61,6 +75,10 @@ public class ThreadDumpEditor extends AbstractDumpEditor {
     @Override
     protected void createClientPages() {
         createThreadsPage();
+        if (!eclipseJobElements.isEmpty()) {
+            createJobsPage();
+        }
+        addListeners();
 
         PlatformUI.getWorkbench().getHelpSystem()
                 .setHelp(getContainer(), IHelpContextIds.THREADS_DUMP_EDITOR);
@@ -92,7 +110,7 @@ public class ThreadDumpEditor extends AbstractDumpEditor {
      */
     @Override
     public void setFocus() {
-        threadSashForm.setFocus();
+        threadsPage.setFocus();
     }
 
     /*
@@ -104,34 +122,73 @@ public class ThreadDumpEditor extends AbstractDumpEditor {
         if (threadImage != null) {
             threadImage.dispose();
         }
+        if (jobImage != null) {
+            jobImage.dispose();
+        }
     }
 
     /**
-     * Gets the thread sash form.
-     * 
-     * @return The thread sash form
+     * Gets the threads page.
+     *
+     * @return The threads page
      */
-    protected ThreadSashForm getThreadSashForm() {
-        return threadSashForm;
+    protected ThreadsPage getThreadsPage() {
+        return threadsPage;
+    }
+
+    private void addListeners() {
+        addPageChangedListener(new IPageChangedListener() {
+            @Override
+            public void pageChanged(PageChangedEvent event) {
+                pageSelectionChanged();
+            }
+        });
+    }
+
+    private void pageSelectionChanged() {
+        IStatusLineManager manager = getEditorSite().getActionBars().getStatusLineManager();
+        manager.setMessage(null);
+
+        for (IContributionItem item : manager.getItems()) {
+            if (item instanceof StatusLineContributionItem) {
+                ((StatusLineContributionItem) item).setText(Util.ZERO_LENGTH_STRING);
+            }
+        }
     }
 
     /**
      * Creates the threads page.
      */
     private void createThreadsPage() {
-        threadSashForm = new ThreadSashForm(getContainer(), getEditorSite()
-                .getActionBars());
-        threadSashForm.setInput(new IThreadInput() {
+        threadsPage = new ThreadsPage(getContainer(), getEditorSite().getActionBars());
+        threadsPage.setInput(new IThreadInput() {
             @Override
             public IThreadElement[] getThreadListElements() {
                 return threadListElements.toArray(new IThreadElement[0]);
             }
         });
-        int page = addPage(threadSashForm);
+        int page = addPage(threadsPage);
         setPageText(page, Messages.threadsTabLabel);
         setPageImage(page, getThreadImage());
 
-        threadSashForm.refresh();
+        threadsPage.refresh();
+    }
+
+    private void createJobsPage() {
+        jobsPage = new EclipseJobsPage(getContainer(), getEditorSite().getActionBars());
+        jobsPage.setInput(new IEclipseJobInput() {
+
+            @Override
+            public IEclipseJobElement[] getEclipseJobElements() {
+                return eclipseJobElements.toArray(new IEclipseJobElement[0]);
+            }
+        });
+
+        int page = addPage(jobsPage);
+        setPageText(page, Messages.jobsTabLabel);
+        setPageImage(page, getJobImage());
+
+        threadsPage.refresh();
     }
 
     /**
@@ -147,6 +204,14 @@ public class ThreadDumpEditor extends AbstractDumpEditor {
         return threadImage;
     }
 
+    private Image getJobImage() {
+        if (jobImage == null || jobImage.isDisposed()) {
+            jobImage = Activator.getImageDescriptor(
+                    ISharedImages.RUNNING_JOB_IMG_PATH).createImage();
+        }
+        return jobImage;
+    }
+
     /**
      * Parses the dump file.
      * 
@@ -160,7 +225,7 @@ public class ThreadDumpEditor extends AbstractDumpEditor {
             @Override
             protected IStatus run(IProgressMonitor monitor) {
                 final ThreadDumpParser parser = new ThreadDumpParser(new File(
-                        filePath), threadListElements, monitor);
+                        filePath), threadListElements, eclipseJobElements, monitor);
 
                 try {
                     parser.parse();
@@ -170,6 +235,9 @@ public class ThreadDumpEditor extends AbstractDumpEditor {
                 } catch (SAXException e) {
                     return new Status(IStatus.ERROR, Activator.PLUGIN_ID,
                             "Could not load thread dump file.", e); //$NON-NLS-1$
+                } catch (FileNotFoundException e) {
+                    // file might have been removed
+                    return Status.OK_STATUS;
                 } catch (IOException e) {
                     return new Status(IStatus.ERROR, Activator.PLUGIN_ID,
                             "Could not load thread dump file.", e); //$NON-NLS-1$
@@ -179,8 +247,8 @@ public class ThreadDumpEditor extends AbstractDumpEditor {
                 Display.getDefault().asyncExec(new Runnable() {
                     @Override
                     public void run() {
-                        if (threadSashForm != null) {
-                            threadSashForm.refresh();
+                        if (threadsPage != null) {
+                            threadsPage.refresh();
                         }
                     }
                 });

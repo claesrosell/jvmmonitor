@@ -71,6 +71,9 @@ public final class Messages extends NLS {
     /** */
     public static String threadsTabLabel;
 
+    /** */
+    public static String jobsTabLabel;
+
     // CPU dump editor
 
     /** */

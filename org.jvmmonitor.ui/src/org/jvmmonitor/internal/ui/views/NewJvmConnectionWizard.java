@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2010 JVM Monitor project. All rights reserved. 
- * 
+ * Copyright (c) 2010 JVM Monitor project. All rights reserved.
+ *
  * This code is distributed under the terms of the Eclipse Public License v1.0
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
@@ -26,7 +26,6 @@ import org.jvmmonitor.core.IActiveJvm;
 import org.jvmmonitor.core.IHost;
 import org.jvmmonitor.core.JvmCoreException;
 import org.jvmmonitor.core.JvmModel;
-import org.jvmmonitor.internal.ui.IConstants;
 import org.jvmmonitor.ui.Activator;
 
 /**
@@ -38,11 +37,11 @@ public class NewJvmConnectionWizard extends Wizard implements INewWizard {
     private NewJvmConnectionWizardPage page;
 
     /** The tree viewer. */
-    private TreeViewer viewer;
+    private final TreeViewer viewer;
 
     /**
      * The constructor.
-     * 
+     *
      * @param viewer
      *            The tree viewer
      */
@@ -83,9 +82,7 @@ public class NewJvmConnectionWizard extends Wizard implements INewWizard {
 
         // connect to JVM
         try {
-            int period = Activator.getDefault().getPreferenceStore()
-                    .getInt(IConstants.UPDATE_PERIOD);
-            jvm.connect(period);
+            jvm.connect();
         } catch (JvmCoreException e) {
             Activator.log(NLS.bind(Messages.connectJvmFailedMsg, jvm.getPid()),
                     e);
@@ -106,7 +103,7 @@ public class NewJvmConnectionWizard extends Wizard implements INewWizard {
 
     /**
      * Adds the active JVM.
-     * 
+     *
      * @return The active JVM
      */
     private IActiveJvm addActiveJvm() {
@@ -124,17 +121,14 @@ public class NewJvmConnectionWizard extends Wizard implements INewWizard {
                 public void run(IProgressMonitor monitor)
                         throws InvocationTargetException, InterruptedException {
                     try {
-                        int period = Activator.getDefault()
-                                .getPreferenceStore()
-                                .getInt(IConstants.UPDATE_PERIOD);
                         if (isHostAndPortSelected) {
                             IHost host = JvmModel.getInstance().addHost(
                                     hostName);
                             result[0] = host.addRemoteActiveJvm(port, userName,
-                                    password, period);
+                                    password);
                         } else {
                             result[0] = JvmModel.getInstance().addHostAndJvm(
-                                    jmxUrl, userName, password, period);
+                                    jmxUrl, userName, password);
                         }
                     } catch (JvmCoreException e) {
                         throw new InvocationTargetException(e);
@@ -153,7 +147,7 @@ public class NewJvmConnectionWizard extends Wizard implements INewWizard {
 
     /**
      * Opens the error dialog.
-     * 
+     *
      * @param e
      *            The exception
      */
@@ -169,7 +163,7 @@ public class NewJvmConnectionWizard extends Wizard implements INewWizard {
 
     /**
      * Gets the error message.
-     * 
+     *
      * @param e
      *            The exception
      * @return The error message

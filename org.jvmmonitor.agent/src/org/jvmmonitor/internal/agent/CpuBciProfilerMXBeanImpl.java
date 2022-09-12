@@ -65,9 +65,10 @@ public class CpuBciProfilerMXBeanImpl implements CpuBciProfilerMXBean {
                 try {
                     inst.addTransformer(classFileTransformer, true);
                     retransformClasses();
-                    inst.removeTransformer(classFileTransformer);
                 } catch (Throwable t) {
                     Agent.logError(t, Messages.CANNOT_TRANSFORM_CLASSES);
+                } finally {
+                    inst.removeTransformer(classFileTransformer);
                 }
             }
         }.start();
@@ -256,7 +257,7 @@ public class CpuBciProfilerMXBeanImpl implements CpuBciProfilerMXBean {
                 inst.retransformClasses(clazz);
                 Agent.logInfo(Messages.RETRANSFORMED_CLASS, clazz);
             } catch (UnmodifiableClassException e) {
-                Agent.logError(e, Messages.CANNOT_RETRANSFORM_CLASS);
+                Agent.logError(e, Messages.CANNOT_RETRANSFORM_CLASS, clazz);
             } catch (InternalError e) {
                 // continue to transform the other classes
             } catch (VerifyError e) {

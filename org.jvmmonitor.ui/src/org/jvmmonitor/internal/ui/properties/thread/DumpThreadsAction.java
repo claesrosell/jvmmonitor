@@ -6,6 +6,8 @@
  *******************************************************************************/
 package org.jvmmonitor.internal.ui.properties.thread;
 
+import java.util.UUID;
+
 import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -39,8 +41,7 @@ public class DumpThreadsAction extends Action {
                 .getImageDescriptor(ISharedImages.TAKE_THREAD_DUMP_IMG_PATH));
         setDisabledImageDescriptor(Activator
                 .getImageDescriptor(ISharedImages.DISABLED_TAKE_THREAD_DUMP_IMG_PATH));
-        setId(getClass().getName());
-
+        setId(UUID.randomUUID().toString());
         this.section = section;
     }
 

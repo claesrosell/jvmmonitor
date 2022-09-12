@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2010 JVM Monitor project. All rights reserved. 
- * 
+ * Copyright (c) 2010 JVM Monitor project. All rights reserved.
+ *
  * This code is distributed under the terms of the Eclipse Public License v1.0
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
@@ -186,8 +186,6 @@ public class MemorySection extends AbstractJvmPropertySection {
         if (jvm != null && jvm.isConnected()) {
             if (jvm.isRemote()) {
                 setMessageLabel(Messages.notSupportedOnRemoteHostMsg);
-            } else if (!heapHistogramPage.isSupported()) {
-                setMessageLabel(Messages.notSupportedForEclipseItselfOn64bitOS);
             } else {
                 setMessageLabel("");//$NON-NLS-1$
             }
@@ -198,7 +196,7 @@ public class MemorySection extends AbstractJvmPropertySection {
 
     /**
      * Updates the tab height.
-     * 
+     *
      * @param jvm
      *            The JVM
      */
@@ -229,7 +227,7 @@ public class MemorySection extends AbstractJvmPropertySection {
 
     /**
      * Sets the message label inside the heap histogram page.
-     * 
+     *
      * @param message
      *            The message
      */

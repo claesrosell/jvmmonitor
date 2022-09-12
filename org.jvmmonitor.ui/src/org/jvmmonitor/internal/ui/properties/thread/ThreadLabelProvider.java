@@ -1,20 +1,22 @@
 /*******************************************************************************
- * Copyright (c) 2010 JVM Monitor project. All rights reserved. 
- * 
+ * Copyright (c) 2010 JVM Monitor project. All rights reserved.
+ *
  * This code is distributed under the terms of the Eclipse Public License v1.0
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
 package org.jvmmonitor.internal.ui.properties.thread;
 
+import static org.jvmmonitor.core.IPreferenceConstants.*;
+
 import java.lang.Thread.State;
 
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Tree;
 import org.jvmmonitor.core.IThreadElement;
-import org.jvmmonitor.internal.ui.IConstants;
 import org.jvmmonitor.internal.ui.properties.overview.IFormat;
 import org.jvmmonitor.ui.Activator;
 import org.jvmmonitor.ui.ISharedImages;
@@ -46,11 +48,11 @@ public class ThreadLabelProvider extends LabelProvider implements
     private Image threadDeadlockedObjImage;
 
     /** The tree viewer. */
-    private TreeViewer treeViewer;
+    private final TreeViewer treeViewer;
 
     /**
      * The constructor.
-     * 
+     *
      * @param treeViewer
      *            The tree viewer
      */
@@ -83,7 +85,7 @@ public class ThreadLabelProvider extends LabelProvider implements
 
     /*
      * Gets the text for filtering.
-     * 
+     *
      * @see LabelProvider#getText(java.lang.Object)
      */
     @Override
@@ -99,8 +101,8 @@ public class ThreadLabelProvider extends LabelProvider implements
             }
 
             // stack traces
-            if (Activator.getDefault().getPreferenceStore()
-                    .getBoolean(IConstants.WIDE_SCOPE_THREAD_FILTER)) {
+            if (InstanceScope.INSTANCE.getNode(PREFERENCES_ID).getBoolean(WIDE_SCOPE_THREAD_FILTER,
+                    DEFAULT_WIDE_SCOPE_THREAD_FILTER)) {
                 for (StackTraceElement element : ((IThreadElement) obj)
                         .getStackTraceElements()) {
                     buffer.append(element.getClassName()).append('.')
@@ -134,7 +136,7 @@ public class ThreadLabelProvider extends LabelProvider implements
 
     /**
      * Gets the column text with the given thread list element.
-     * 
+     *
      * @param element
      *            The thread list element
      * @param columnIndex
@@ -170,7 +172,7 @@ public class ThreadLabelProvider extends LabelProvider implements
 
     /**
      * Gets the column index corresponding to the given column.
-     * 
+     *
      * @param column
      *            The thread column
      * @return The column index
@@ -187,7 +189,7 @@ public class ThreadLabelProvider extends LabelProvider implements
 
     /**
      * Gets the thread object image.
-     * 
+     *
      * @param element
      *            The thread list element
      * @return The image

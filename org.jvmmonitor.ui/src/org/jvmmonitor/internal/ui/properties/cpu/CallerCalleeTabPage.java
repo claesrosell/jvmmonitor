@@ -123,6 +123,10 @@ public class CallerCalleeTabPage extends AbstractTabPage {
      */
     @Override
     protected void refresh() {
+        if (!isVisible()) {
+            return;
+        }
+
         TreeViewer callerViewer = callerFilteredTree.getViewer();
         if (!callerViewer.getControl().isDisposed()) {
             callerViewer.refresh();

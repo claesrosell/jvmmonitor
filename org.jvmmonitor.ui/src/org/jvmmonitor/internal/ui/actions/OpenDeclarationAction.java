@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2010 JVM Monitor project. All rights reserved. 
- * 
+ * Copyright (c) 2010 JVM Monitor project. All rights reserved.
+ *
  * This code is distributed under the terms of the Eclipse Public License v1.0
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
@@ -54,6 +54,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.texteditor.ITextEditor;
+import org.jvmmonitor.core.IEclipseJobElement;
 import org.jvmmonitor.core.IHeapElement;
 import org.jvmmonitor.core.cpu.IMethodNode;
 import org.jvmmonitor.ui.Activator;
@@ -74,7 +75,7 @@ public class OpenDeclarationAction extends Action implements
     private String[] parameters;
 
     /** The inner class indices. */
-    private List<Integer> innterClassIndices;
+    private final List<Integer> innterClassIndices;
 
     /** The state indicating if search engine has been initialized. */
     static boolean searchEngineInitialized = false;
@@ -86,7 +87,7 @@ public class OpenDeclarationAction extends Action implements
         setText(Messages.openDeclarationLabel);
         setActionDefinitionId(IJavaEditorActionDefinitionIds.OPEN_EDITOR);
 
-        innterClassIndices = new ArrayList<Integer>();
+        innterClassIndices = new ArrayList<>();
     }
 
     /**
@@ -94,7 +95,7 @@ public class OpenDeclarationAction extends Action implements
      * in the given action bars, the found action will be returned, otherwise
      * the open declaration action will be newly created and set to the given
      * action bars as a global action.
-     * 
+     *
      * @param actionBars
      *            The action bars.
      * @return The open declaration action
@@ -180,7 +181,7 @@ public class OpenDeclarationAction extends Action implements
 
     /**
      * Parses the selection.
-     * 
+     *
      * @param selection
      *            The selection
      */
@@ -212,6 +213,10 @@ public class OpenDeclarationAction extends Action implements
             className = ((IHeapElement) element).getClassName();
             methodName = null;
             parameters = new String[0];
+        } else if (element instanceof IEclipseJobElement) {
+            className = ((IEclipseJobElement) element).getClassName();
+            methodName = null;
+            parameters = new String[0];
         } else {
             className = null;
             methodName = null;
@@ -235,7 +240,7 @@ public class OpenDeclarationAction extends Action implements
 
     /**
      * Highlights the method on editor.
-     * 
+     *
      * @param editorInput
      *            The editor input
      * @param editorPart
@@ -267,7 +272,7 @@ public class OpenDeclarationAction extends Action implements
 
     /**
      * Searches the source for the given class name with progress monitor.
-     * 
+     *
      * @return The source
      * @throws InterruptedException
      *             if operation is canceled
@@ -328,14 +333,14 @@ public class OpenDeclarationAction extends Action implements
 
     /**
      * Searches the source for the given class name.
-     * 
+     *
      * @param name
      *            The class name
      * @return The source
      * @throws CoreException
      */
     IType doSearchSource(String name) throws CoreException {
-        final List<IType> results = new ArrayList<IType>();
+        final List<IType> results = new ArrayList<>();
 
         // create requester
         SearchRequestor requestor = new SearchRequestor() {
@@ -372,7 +377,7 @@ public class OpenDeclarationAction extends Action implements
 
     /**
      * Opens the editor.
-     * 
+     *
      * @param editorInput
      *            The editor input
      * @param presentation
@@ -400,7 +405,7 @@ public class OpenDeclarationAction extends Action implements
 
     /**
      * Gets the source range.
-     * 
+     *
      * @param editorInput
      *            The editor input
      * @return The source range
@@ -410,7 +415,7 @@ public class OpenDeclarationAction extends Action implements
             throws JavaModelException {
 
         ITypeRoot typeRoot = JavaUI.getEditorInputTypeRoot(editorInput);
-        LinkedList<ISourceRange> sourceRanges = new LinkedList<ISourceRange>();
+        LinkedList<ISourceRange> sourceRanges = new LinkedList<>();
         if (typeRoot instanceof IClassFile) {
             // class file
             IType type = ((IClassFile) typeRoot).getType();
@@ -436,7 +441,7 @@ public class OpenDeclarationAction extends Action implements
 
     /**
      * Gets the method name range.
-     * 
+     *
      * @param javaElements
      *            The java elements
      * @param level
@@ -494,7 +499,7 @@ public class OpenDeclarationAction extends Action implements
 
     /**
      * Gets the readable parameter types with given type signatures.
-     * 
+     *
      * @param signatures
      *            The type signatures e.g. <tt>QString;I</tt>
      * @return The readable parameter types <tt>String, int</tt>
@@ -510,7 +515,7 @@ public class OpenDeclarationAction extends Action implements
     /**
      * Gets the simplified parameters with given qualified parameters e.g.
      * <tt>(java.lang.String, int)</tt>.
-     * 
+     *
      * @param parameter
      *            The simplified parameters e.g. <tt>String, int</tt>
      * @return The simplified parameters
@@ -536,7 +541,7 @@ public class OpenDeclarationAction extends Action implements
 
     /**
      * Gets the simplified constructor name.
-     * 
+     *
      * @param clazz
      *            The class name
      * @return The simplified constructor name

@@ -1,17 +1,18 @@
 /*******************************************************************************
- * Copyright (c) 2011 JVM Monitor project. All rights reserved. 
- * 
+ * Copyright (c) 2011 JVM Monitor project. All rights reserved.
+ *
  * This code is distributed under the terms of the Eclipse Public License v1.0
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
 package org.jvmmonitor.internal.ui.properties.memory;
 
+import static org.jvmmonitor.core.IPreferenceConstants.*;
+
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.jvmmonitor.core.ISWTResourceElement;
-import org.jvmmonitor.internal.ui.IConstants;
-import org.jvmmonitor.ui.Activator;
 
 /**
  * The label provider for SWT resources viewer extending LabelProvider to change
@@ -38,7 +39,7 @@ public class SWTResourceLabelProvider extends LabelProvider implements
 
     /*
      * Gets the text for filtering.
-     * 
+     *
      * @see LabelProvider#getText(java.lang.Object)
      */
     @Override
@@ -48,8 +49,8 @@ public class SWTResourceLabelProvider extends LabelProvider implements
             buffer.append(((ISWTResourceElement) obj).getName()).append(' ');
 
             // stack traces
-            if (Activator.getDefault().getPreferenceStore()
-                    .getBoolean(IConstants.WIDE_SCOPE_SWT_RESOURCE_FILTER)) {
+            if (InstanceScope.INSTANCE.getNode(PREFERENCES_ID).getBoolean(WIDE_SCOPE_SWT_RESOURCE_FILTER,
+                    DEFAULT_WIDE_SCOPE_SWT_RESOURCE_FILTER)) {
                 for (StackTraceElement element : ((ISWTResourceElement) obj)
                         .getStackTraceElements()) {
                     buffer.append(element.getClassName()).append('.')

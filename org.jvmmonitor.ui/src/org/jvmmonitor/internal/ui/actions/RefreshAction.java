@@ -6,6 +6,8 @@
  *******************************************************************************/
 package org.jvmmonitor.internal.ui.actions;
 
+import java.util.UUID;
+
 import org.eclipse.jface.action.Action;
 import org.jvmmonitor.core.JvmModelEvent;
 import org.jvmmonitor.core.JvmModelEvent.State;
@@ -33,7 +35,7 @@ public class RefreshAction extends Action {
                 .getImageDescriptor(ISharedImages.REFRESH_IMG_PATH));
         setDisabledImageDescriptor(Activator
                 .getImageDescriptor(ISharedImages.DISABLED_REFRESH_IMG_PATH));
-        setId(getClass().getName());
+        setId(UUID.randomUUID().toString());
 
         setChecked(true);
         this.section = section;

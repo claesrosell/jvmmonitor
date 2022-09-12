@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2010 JVM Monitor project. All rights reserved. 
- * 
+ * Copyright (c) 2010 JVM Monitor project. All rights reserved.
+ *
  * This code is distributed under the terms of the Eclipse Public License v1.0
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
@@ -27,7 +27,7 @@ public final class Messages extends NLS {
         // do not instantiate
     }
 
-    // thread column
+    // threads page
 
     /** */
     public static String threadColumnLabel;
@@ -83,6 +83,38 @@ public final class Messages extends NLS {
     /** */
     public static String lockOwnerColumnToolTip;
 
+    /** */
+    public static String threadsLabel;
+
+    // jobs page
+
+    /** */
+    public static String jobColumnLabel;
+
+    /** */
+    public static String classColumnLabel;
+
+    /** */
+    public static String progressMonitorStateColumnLabel;
+
+    /** */
+    public static String schedulingRuleColumnLabel;
+
+    /** */
+    public static String jobColumnToolTip;
+
+    /** */
+    public static String classColumnToolTip;
+
+    /** */
+    public static String progressMonitorStateColumnToolTip;
+
+    /** */
+    public static String schedulingRuleColumnToolTip;
+
+    /** */
+    public static String jobsLabel;
+
     // actions
 
     /** */
@@ -97,10 +129,22 @@ public final class Messages extends NLS {
     public static String dumpThreadsJobLabel;
 
     /** */
-    public static String refreshThreadsSectionJobLabel;
+    public static String refreshThreadsPageJobLabel;
+
+    /** */
+    public static String refreshJobsPageJobLabel;
 
     // error log message
 
     /** */
     public static String dumpThreadsFailedMsg;
+
+
+    // status line message
+
+    /** */
+    public static String schedulingRuleMsg;
+
+    /** */
+    public static String schedulingRulesMsg;
 }

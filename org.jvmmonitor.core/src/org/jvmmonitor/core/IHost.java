@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2010 JVM Monitor project. All rights reserved. 
- * 
+ * Copyright (c) 2010 JVM Monitor project. All rights reserved.
+ *
  * This code is distributed under the terms of the Eclipse Public License v1.0
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
@@ -18,7 +18,7 @@ public interface IHost {
 
     /**
      * Gets the host name.
-     * 
+     *
      * @return The host name
      */
     String getName();
@@ -26,45 +26,42 @@ public interface IHost {
     /**
      * Gets the list of JVMs including not only active JVMs but also terminated
      * JVMs.
-     * 
+     *
      * @return The list of JVMs
      */
     List<IJvm> getJvms();
 
     /**
      * Gets the list of terminated JVMs.
-     * 
+     *
      * @return The list of terminated JVMs
      */
     List<ITerminatedJvm> getTerminatedJvms();
 
     /**
      * Gets the list of active JVMs.
-     * 
+     *
      * @return The list of active JVMs
      */
     List<IActiveJvm> getActiveJvms();
 
     /**
      * Adds the remote active JVM.
-     * 
+     *
      * @param port
      *            The port
      * @param userName
      *            The user name
      * @param password
      *            The password
-     * @param updatePeriod
-     *            The update period
      * @return The active JVM
      * @throws JvmCoreException
      */
-    IActiveJvm addRemoteActiveJvm(int port, String userName, String password,
-            int updatePeriod) throws JvmCoreException;
+    IActiveJvm addRemoteActiveJvm(int port, String userName, String password) throws JvmCoreException;
 
     /**
      * Adds the local active JVM.
-     * 
+     *
      * @param pid
      *            The process id of JVM.
      * @param mainClass
@@ -82,7 +79,7 @@ public interface IHost {
 
     /**
      * Removes the JVM.
-     * 
+     *
      * @param pid
      *            The process ID of JVM.
      */
@@ -90,7 +87,7 @@ public interface IHost {
 
     /**
      * Return <tt>true</tt> if this is local host.
-     * 
+     *
      * @return True if this is local host.
      */
     boolean isLocalHost();

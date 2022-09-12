@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2010 JVM Monitor project. All rights reserved. 
- * 
+ * Copyright (c) 2010 JVM Monitor project. All rights reserved.
+ *
  * This code is distributed under the terms of the Eclipse Public License v1.0
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
@@ -33,12 +33,15 @@ abstract public class AbstractChartSetAction extends Action implements
     /** The predefined memory chart set. */
     static final String MEMORY_CHART_SET = "Memory"; //$NON-NLS-1$
 
+    /** The key for chart sets. */
+    static final String CHART_SETS = "ChartSets"; //$NON-NLS-1$
+
     /** The property section. */
     AbstractJvmPropertySection section;
 
     /**
      * The constructor.
-     * 
+     *
      * @param section
      *            The property section
      */
@@ -49,7 +52,7 @@ abstract public class AbstractChartSetAction extends Action implements
 
     /**
      * Gets the chart sets memento.
-     * 
+     *
      * @return The chart sets memento, or <tt>null</tt> if no chart sets are
      *         saved yet
      * @throws WorkbenchException
@@ -66,13 +69,13 @@ abstract public class AbstractChartSetAction extends Action implements
 
     /**
      * Gets the chart sets stored as chart sets memento.
-     * 
+     *
      * @return The chart sets
      * @throws WorkbenchException
      * @throws IOException
      */
     List<String> getChartSets() throws WorkbenchException, IOException {
-        List<String> elements = new ArrayList<String>();
+        List<String> elements = new ArrayList<>();
 
         IMemento chartSetsMemento = getChartSetsMemento();
         if (chartSetsMemento == null) {
@@ -90,7 +93,7 @@ abstract public class AbstractChartSetAction extends Action implements
 
     /**
      * Gets the predefined chart sets.
-     * 
+     *
      * @return The predefined chart sets
      */
     List<String> getPredefinedChartSets() {

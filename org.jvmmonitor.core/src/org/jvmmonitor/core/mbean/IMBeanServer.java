@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2010 JVM Monitor project. All rights reserved. 
- * 
+ * Copyright (c) 2010 JVM Monitor project. All rights reserved.
+ *
  * This code is distributed under the terms of the Eclipse Public License v1.0
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
@@ -15,6 +15,7 @@ import javax.management.ObjectName;
 
 import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.jvmmonitor.core.IEclipseJobElement;
 import org.jvmmonitor.core.IHeapElement;
 import org.jvmmonitor.core.IThreadElement;
 import org.jvmmonitor.core.JvmCoreException;
@@ -27,7 +28,7 @@ public interface IMBeanServer {
 
     /**
      * Queries the names.
-     * 
+     *
      * @param objectName
      *            The object name, or <tt>null</tt> to get all names
      * @return The set of object names
@@ -37,7 +38,7 @@ public interface IMBeanServer {
 
     /**
      * Gets the attribute.
-     * 
+     *
      * @param objectName
      *            The object name
      * @param attributeName
@@ -50,7 +51,7 @@ public interface IMBeanServer {
 
     /**
      * Sets the attribute.
-     * 
+     *
      * @param objectName
      *            The object name
      * @param attribute
@@ -62,14 +63,14 @@ public interface IMBeanServer {
 
     /**
      * Gets the monitored attribute groups.
-     * 
+     *
      * @return The monitored attribute groups
      */
     List<IMonitoredMXBeanGroup> getMonitoredAttributeGroups();
 
     /**
      * Adds the monitored attribute group.
-     * 
+     *
      * @param name
      *            The attribute group name
      * @param axisUnit
@@ -81,7 +82,7 @@ public interface IMBeanServer {
 
     /**
      * Removes the monitored attribute group.
-     * 
+     *
      * @param name
      *            The monitored attribute group name
      */
@@ -89,7 +90,7 @@ public interface IMBeanServer {
 
     /**
      * Gets the MBean info.
-     * 
+     *
      * @param objectName
      *            The object name
      * @return The MBean info
@@ -99,21 +100,21 @@ public interface IMBeanServer {
 
     /**
      * Gets the MBean notification.
-     * 
+     *
      * @return The MBean notification
      */
     IMBeanNotification getMBeanNotification();
 
     /**
      * Runs the garbage collector.
-     * 
+     *
      * @throws JvmCoreException
      */
     void runGarbageCollector() throws JvmCoreException;
 
     /**
      * Invokes the method.
-     * 
+     *
      * @param objectName
      *            The object name
      * @param method
@@ -130,7 +131,7 @@ public interface IMBeanServer {
 
     /**
      * Gets the thread names.
-     * 
+     *
      * @return The thread names
      * @throws JvmCoreException
      */
@@ -140,29 +141,44 @@ public interface IMBeanServer {
      * Gets the thread cache in JVM model without accessing to target JVM. To
      * get the up-to-dated thread data, {@link #refreshThreadCache()} has to be
      * invoked.
-     * 
+     *
      * @return The thread cache
      */
     IThreadElement[] getThreadCache();
 
     /**
      * Refreshes the thread cache in JVM model accessing to target JVM.
-     * 
+     *
      * @throws JvmCoreException
      */
     void refreshThreadCache() throws JvmCoreException;
 
     /**
+     * Gets the eclipse job cache in JVM model without accessing to target JVM. To
+     * get the up-to-date data, {@link #refreshEclipseJobCache()} has to be invoked.
+     *
+     * @return The eclipse job cache
+     */
+    IEclipseJobElement[] getEclipseJobCache();
+
+    /**
+     * Refreshes the eclipse job cache in JVM model accessing to target JVM.
+     *
+     * @throws JvmCoreException
+     */
+    void refreshEclipseJobCache() throws JvmCoreException;
+
+    /**
      * Gets the heap cache in JVM model without accessing to target JVM. To get
      * the up-to-dated heap data, {@link #refreshHeapCache()} has to be invoked.
-     * 
+     *
      * @return The heap cache
      */
     IHeapElement[] getHeapCache();
 
     /**
      * Refreshes the heap cache in JVM model accessing to target JVM.
-     * 
+     *
      * @throws JvmCoreException
      */
     void refreshHeapCache() throws JvmCoreException;
@@ -174,7 +190,7 @@ public interface IMBeanServer {
 
     /**
      * Dumps the heap data as hprof file.
-     * 
+     *
      * @param hprofFileName
      *            The hprof file name used when monitoring JVM on remote host
      * @param transfer
@@ -190,7 +206,7 @@ public interface IMBeanServer {
 
     /**
      * Dumps the heap data.
-     * 
+     *
      * @return The file store
      * @throws JvmCoreException
      */
@@ -198,23 +214,15 @@ public interface IMBeanServer {
 
     /**
      * Dumps the threads.
-     * 
+     *
      * @return The file store
      * @throws JvmCoreException
      */
     IFileStore dumpThreads() throws JvmCoreException;
 
     /**
-     * Sets the update period.
-     * 
-     * @param updatePeriod
-     *            The update period
-     */
-    void setUpdatePeriod(Integer updatePeriod);
-
-    /**
      * Adds the MBean server change listener.
-     * 
+     *
      * @param listener
      *            The MBean server change listener
      */
@@ -222,7 +230,7 @@ public interface IMBeanServer {
 
     /**
      * removes the MBean server change listener.
-     * 
+     *
      * @param listener
      *            The MBean server change listener
      */

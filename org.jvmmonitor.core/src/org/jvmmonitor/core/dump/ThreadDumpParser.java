@@ -15,6 +15,7 @@ import javax.xml.parsers.SAXParserFactory;
 
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.jvmmonitor.core.IEclipseJobElement;
 import org.jvmmonitor.core.IThreadElement;
 import org.jvmmonitor.internal.core.ThreadDumpSaxEventHandler;
 import org.xml.sax.SAXException;
@@ -27,6 +28,8 @@ public class ThreadDumpParser extends AbstractDumpParser {
     /** The thread list elements. */
     private List<IThreadElement> threadListElements;
 
+    private List<IEclipseJobElement> eclipseJobElements;
+    
     /**
      * The constructor.
      * 
@@ -34,16 +37,19 @@ public class ThreadDumpParser extends AbstractDumpParser {
      *            the dump file
      * @param threadListElements
      *            The thread list elements
+     * @param eclipseJobElements
+     *            The eclipse job elements
      * @param monitor
      *            The progress monitor
      */
-    public ThreadDumpParser(File file, List<IThreadElement> threadListElements,
+    public ThreadDumpParser(File file, List<IThreadElement> threadListElements,List<IEclipseJobElement> eclipseJobElements,
             IProgressMonitor monitor) {
         super(monitor);
         Assert.isNotNull(file);
 
         this.file = file;
         this.threadListElements = threadListElements;
+        this.eclipseJobElements = eclipseJobElements;
     }
 
     /**
@@ -60,7 +66,7 @@ public class ThreadDumpParser extends AbstractDumpParser {
             IOException {
         parser = SAXParserFactory.newInstance().newSAXParser();
         ThreadDumpSaxEventHandler handler = new ThreadDumpSaxEventHandler(
-                threadListElements, monitor);
+                threadListElements, eclipseJobElements, monitor);
 
         parser.parse(file, handler);
         info = handler.getProfileInfo();

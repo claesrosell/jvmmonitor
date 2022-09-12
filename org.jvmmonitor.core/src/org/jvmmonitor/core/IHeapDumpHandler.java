@@ -1,15 +1,13 @@
 /*******************************************************************************
- * Copyright (c) 2010 JVM Monitor project. All rights reserved. 
- * 
+ * Copyright (c) 2010 JVM Monitor project. All rights reserved.
+ *
  * This code is distributed under the terms of the Eclipse Public License v1.0
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
 package org.jvmmonitor.core;
 
 /**
- * The heap dump handler. A client plug-in that contributes to the extension
- * point <tt>org.jvmmonitor.core.heapDumpHandler</tt> will implement this
- * interface.
+ * The heap dump handler.
  */
 public interface IHeapDumpHandler {
 
@@ -20,7 +18,7 @@ public interface IHeapDumpHandler {
      * {@link #getMaxClassesNumber()}.
      * <p>
      * e.g.
-     * 
+     *
      * <pre>
      *  num     #instances         #bytes  class name
      * ----------------------------------------------
@@ -30,7 +28,7 @@ public interface IHeapDumpHandler {
      *    4:         11664         989856  [C
      *    5:         11547         277128  java.lang.String
      * </pre>
-     * 
+     *
      * @param pid
      *            The process ID
      * @param isLive
@@ -42,7 +40,7 @@ public interface IHeapDumpHandler {
 
     /**
      * Gets the max classes number.
-     * 
+     *
      * @return The max classes number
      */
     int getMaxClassesNumber();

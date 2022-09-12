@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2010 JVM Monitor project. All rights reserved. 
- * 
+ * Copyright (c) 2010 JVM Monitor project. All rights reserved.
+ *
  * This code is distributed under the terms of the Eclipse Public License v1.0
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
@@ -116,8 +116,43 @@ public final class Messages extends NLS {
     /** */
     public static String jvmNotReachableMsg;
 
+    /** */
+    public static String loadAgentFailedMsg;
+
+    /** */
+    public static String jarFileFoundMsg;
+
+    /** */
+    public static String jarFileNotFoundMsg;
+
+    /** */
+    public static String corePluginNoFoundMsg;
+
+    /** */
+    public static String getLocalConnectorAddressFailedMsg;
+
+    /** */
+    public static String connectTargetJvmFailedMsg;
+
+    /** */
+    public static String loadAgentCommandFailedMsg;
+
+    /** */
+    public static String updateTimerCanceledMsg;
+
+    /** */
+    public static String getMainClassNameFailed;
+
+    // property message
+
+    /** */
+    public static String jobSchedulingRuleOwnerUnknownMsg;
+
+    /** */
+    public static String jobSchedulingRuleOwnerCandidatesMsg;
+
     // job names
-    
+
     /** */
     public static String transformClassesTask;
 }

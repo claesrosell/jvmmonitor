@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2010 JVM Monitor project. All rights reserved. 
- * 
+ * Copyright (c) 2010 JVM Monitor project. All rights reserved.
+ *
  * This code is distributed under the terms of the Eclipse Public License v1.0
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
@@ -31,7 +31,7 @@ public class Agent {
      * <p>
      * The typical use case is to profile Java application on remote host where
      * eclipse is not available.
-     * 
+     *
      * @param agentArgs
      *            The agent arguments specified at the option
      *            <tt>-javaagent</tt>. For this agent, nothing will be given
@@ -49,11 +49,11 @@ public class Agent {
     /**
      * The method that is invoked by system if agent is loaded via
      * <tt>VirtualMachine.loadAgent(String, String)</tt>.
-     * 
+     *
      * @param options
      *            The options given by loadAgent(). For this agent, the agent
      *            jar file path will be given
-     * 
+     *
      * @param inst
      *            The instrumentation service
      */
@@ -67,7 +67,7 @@ public class Agent {
 
     /**
      * Logs the info message.
-     * 
+     *
      * @param format
      *            The format for info message
      * @param args
@@ -80,7 +80,7 @@ public class Agent {
 
     /**
      * Logs the error message.
-     * 
+     *
      * @param t
      *            The exception
      * @param format
@@ -95,7 +95,7 @@ public class Agent {
 
     /**
      * Initialize the agent.
-     * 
+     *
      * @param agentJar
      *            The path for agent jar file
      * @param inst
@@ -115,7 +115,7 @@ public class Agent {
 
     /**
      * Gets the agent jar file from input arguments.
-     * 
+     *
      * @return The agent jar file
      */
     private static String getAgentJar() {
@@ -131,7 +131,7 @@ public class Agent {
 
     /**
      * Registers the MXBeans.
-     * 
+     *
      * @param inst
      *            The instrumentation
      * @return <tt>true</tt> if registered, and <tt>false</tt> if nothing was
@@ -149,6 +149,8 @@ public class Agent {
                 DataTransferMXBean.DATA_TRANSFER_MXBEAN_NAME);
         ObjectName swtResourceMonitorObjectName = new ObjectName(
                 SWTResourceMonitorMXBean.SWT_RESOURCE_MONITOR_MXBEAN_NAME);
+        ObjectName eclipseJobManagerObjectName = new ObjectName(
+                EclipseJobManagerMXBean.ECLIPSE_JOB_MANAGER_MXBEAN_NAME);
 
         if (!server.isRegistered(profilerObjectName)) {
             CpuBciProfilerMXBeanImpl profiler = new CpuBciProfilerMXBeanImpl(
@@ -169,8 +171,16 @@ public class Agent {
             if (swtResourceMonitor.isSuppoted()) {
                 server.registerMBean(swtResourceMonitor,
                         swtResourceMonitorObjectName);
+                agentLoaded = true;
             }
-            agentLoaded = true;
+        }
+
+        if (!server.isRegistered(eclipseJobManagerObjectName)) {
+            EclipseJobManagerMXBeanImpl eclipseJobManager = new EclipseJobManagerMXBeanImpl(inst);
+            if (eclipseJobManager.isSuppoted()) {
+                server.registerMBean(eclipseJobManager, eclipseJobManagerObjectName);
+                agentLoaded = true;
+            }
         }
 
         return agentLoaded;

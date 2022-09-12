@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2010 JVM Monitor project. All rights reserved. 
- * 
+ * Copyright (c) 2010 JVM Monitor project. All rights reserved.
+ *
  * This code is distributed under the terms of the Eclipse Public License v1.0
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
@@ -8,6 +8,7 @@ package org.jvmmonitor.internal.core;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.management.ManagementFactory;
 import java.net.MalformedURLException;
 import java.util.Properties;
 
@@ -48,11 +49,14 @@ public class ActiveJvm extends AbstractJvm implements IActiveJvm {
     /** The state indicating if attach mechanism is supported. */
     private boolean isAttachSupported;
 
+    /** The state indicating if the target JVM is current JVM. */
+    private boolean isCurrentJvm;
+
     /** The error state message. */
     private String errorStateMessage;
 
     /** The state indicating if JVM is running on remote host. */
-    private boolean isRemote;
+    private final boolean isRemote;
 
     /** The state indicating if JVM is connected with JMX. */
     private boolean isConnected;
@@ -68,7 +72,7 @@ public class ActiveJvm extends AbstractJvm implements IActiveJvm {
 
     /**
      * The constructor for local JVM.
-     * 
+     *
      * @param pid
      *            The process ID
      * @param url
@@ -83,14 +87,18 @@ public class ActiveJvm extends AbstractJvm implements IActiveJvm {
         isRemote = false;
 
         JMXServiceURL jmxUrl = null;
-        try {
-            if (url != null) {
-                jmxUrl = new JMXServiceURL(url);
-                isAttachSupported = true;
+        isCurrentJvm = ManagementFactory.getRuntimeMXBean().getName().startsWith(pid + "@"); //$NON-NLS-1$
+        if (isCurrentJvm) {
+            isAttachSupported = false;
+        } else {
+            try {
+                if (url != null) {
+                    jmxUrl = new JMXServiceURL(url);
+                    isAttachSupported = true;
+                }
+            } catch (MalformedURLException e) {
+                throw new JvmCoreException(IStatus.ERROR, NLS.bind(Messages.getJmxServiceUrlForPidFailedMsg, pid), e);
             }
-        } catch (MalformedURLException e) {
-            throw new JvmCoreException(IStatus.ERROR, NLS.bind(
-                    Messages.getJmxServiceUrlForPidFailedMsg, pid), e);
         }
 
         initialize(jmxUrl);
@@ -99,7 +107,7 @@ public class ActiveJvm extends AbstractJvm implements IActiveJvm {
 
     /**
      * The constructor for JVM communicating with RMI protocol.
-     * 
+     *
      * @param port
      *            The port
      * @param userName
@@ -108,12 +116,9 @@ public class ActiveJvm extends AbstractJvm implements IActiveJvm {
      *            The password
      * @param host
      *            The host
-     * @param updatePeriod
-     *            The update period
      * @throws JvmCoreException
      */
-    public ActiveJvm(int port, String userName, String password, IHost host,
-            int updatePeriod) throws JvmCoreException {
+    public ActiveJvm(int port, String userName, String password, IHost host) throws JvmCoreException {
         super(port, userName, password, host);
 
         isRemote = true;
@@ -130,7 +135,7 @@ public class ActiveJvm extends AbstractJvm implements IActiveJvm {
         initialize(url);
 
         // refresh
-        connect(updatePeriod);
+        connect();
         refreshPid();
         refreshMainClass();
         refreshSnapshots();
@@ -141,19 +146,16 @@ public class ActiveJvm extends AbstractJvm implements IActiveJvm {
 
     /**
      * The constructor for JVM communicating with RMI protocol.
-     * 
+     *
      * @param url
      *            The JMX URL
      * @param userName
      *            The user name
      * @param password
      *            The password
-     * @param updatePeriod
-     *            The update period
      * @throws JvmCoreException
      */
-    public ActiveJvm(String url, String userName, String password,
-            int updatePeriod) throws JvmCoreException {
+    public ActiveJvm(String url, String userName, String password) throws JvmCoreException {
         super(userName, password);
 
         isRemote = true;
@@ -170,7 +172,7 @@ public class ActiveJvm extends AbstractJvm implements IActiveJvm {
         initialize(jmxUrl);
 
         // refresh
-        connect(updatePeriod);
+        connect();
         refreshPid();
         refreshMainClass();
         boolean jvmAddedToHost = refreshHost();
@@ -182,15 +184,15 @@ public class ActiveJvm extends AbstractJvm implements IActiveJvm {
     }
 
     /*
-     * @see IActiveJvm#connect(int)
+     * @see IActiveJvm#connect()
      */
     @Override
-    public void connect(int updatePeriod) throws JvmCoreException {
-        if (!isAttachSupported) {
+    public void connect() throws JvmCoreException {
+        if (!isAttachSupported && !isCurrentJvm) {
             throw new IllegalStateException(Messages.attachNotSupportedMsg);
         }
 
-        mBeanServer.connect(updatePeriod);
+        mBeanServer.connect();
         isConnected = true;
 
         if (!isRemote) {
@@ -238,7 +240,7 @@ public class ActiveJvm extends AbstractJvm implements IActiveJvm {
      */
     @Override
     public boolean isConnectionSupported() {
-        return isAttachSupported;
+        return isAttachSupported || isCurrentJvm;
     }
 
     /*
@@ -255,6 +257,14 @@ public class ActiveJvm extends AbstractJvm implements IActiveJvm {
     @Override
     public boolean isRemote() {
         return isRemote;
+    }
+
+    /*
+     * @see IActiveJvm#isCurrentJvm()
+     */
+    @Override
+    public boolean isCurrentJvm() {
+        return isCurrentJvm;
     }
 
     /*
@@ -349,7 +359,7 @@ public class ActiveJvm extends AbstractJvm implements IActiveJvm {
 
     /**
      * Sets the error state message.
-     * 
+     *
      * @param errorStateMessage
      *            The error state message
      */
@@ -359,7 +369,7 @@ public class ActiveJvm extends AbstractJvm implements IActiveJvm {
 
     /**
      * Initializes the active JVM.
-     * 
+     *
      * @param url
      *            The JMX service URL
      */
@@ -372,7 +382,7 @@ public class ActiveJvm extends AbstractJvm implements IActiveJvm {
 
     /**
      * Refreshes the PID.
-     * 
+     *
      * @throws JvmCoreException
      */
     private void refreshPid() throws JvmCoreException {
@@ -387,7 +397,7 @@ public class ActiveJvm extends AbstractJvm implements IActiveJvm {
 
     /**
      * Refreshes the host.
-     * 
+     *
      * @return True if JVM has been added to host
      * @throws JvmCoreException
      */
@@ -416,7 +426,7 @@ public class ActiveJvm extends AbstractJvm implements IActiveJvm {
 
     /**
      * Refreshes the main class.
-     * 
+     *
      * @throws JvmCoreException
      */
     private void refreshMainClass() throws JvmCoreException {

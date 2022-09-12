@@ -1,12 +1,13 @@
 /*******************************************************************************
- * Copyright (c) 2010 JVM Monitor project. All rights reserved. 
- * 
+ * Copyright (c) 2010 JVM Monitor project. All rights reserved.
+ *
  * This code is distributed under the terms of the Eclipse Public License v1.0
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
 package org.jvmmonitor.internal.core;
 
-import static java.lang.management.ManagementFactory.newPlatformMXBeanProxy;
+import static java.lang.management.ManagementFactory.*;
+import static org.jvmmonitor.core.IPreferenceConstants.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,6 +29,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.Timer;
@@ -54,9 +56,13 @@ import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.osgi.util.NLS;
 import org.jvmmonitor.core.Activator;
+import org.jvmmonitor.core.IEclipseJobElement;
 import org.jvmmonitor.core.IHeapDumpHandler;
 import org.jvmmonitor.core.IHeapElement;
 import org.jvmmonitor.core.IHost;
@@ -86,35 +92,77 @@ import org.jvmmonitor.internal.core.cpu.ThreadNode;
  * method invocation doesn't return until timeout occurs when target JVM is
  * disconnected.
  */
-public class MBeanServer implements IMBeanServer {
+public class MBeanServer implements IMBeanServer, IPreferenceChangeListener {
 
     /** The data transfer MXBean name. */
     private final static String DATA_TRANSFER_MXBEAN_NAME = "org.jvmmonitor:type=Data Transfer"; //$NON-NLS-1$
+
+    /** The name for <tt>EclipseJobManagerMXBean</tt>. */
+    private final static String ECLIPSE_JOB_MANAGER_MXBEAN_NAME = "org.jvmmonitor:type=Eclipse Job Manager"; //$NON-NLS-1$
+
+    /** The composite attribute "SchedulingRule" in <tt>EclipseJobManagerMXBean</tt>. */
+    private final static String SCHEDULING_RULE_COMPOSITE_ATTRIBUTE = "SchedulingRule"; //$NON-NLS-1$
+
+    /** The attribute "Jobs" in <tt>EclipseJobManagerMXBean</tt>. */
+    private final static String JOBS_ATTRIBUTE = "Jobs"; //$NON-NLS-1$
+
+    /** The attribute "graph" in the composite attribute "SchedulingRule". */
+    private final static String GRAPH_ATTRIBUTE = "graph"; //$NON-NLS-1$
+
+    /** The attribute "locks" in the composite attribute "SchedulingRule". */
+    private final static String LOCKS_ATTRIBUTE = "locks"; //$NON-NLS-1$
+
+    /** The attribute "lockThreads" in the composite attribute "SchedulingRule". */
+    private final static String LOCK_THREADS_ATTRIBUTE = "lockThreads"; //$NON-NLS-1$
+
+    /** The header of string representation for <tt>MultiRule</tt>. */
+    private final static String MULTI_RULE_HEADER = "MultiRule["; //$NON-NLS-1$
+
+    /** The attribute "name" in the composite attribute "SchedulingRule". */
+    private final static String NAME_ATTRIBUTE = "name"; //$NON-NLS-1$
+
+    /** The attribute "className" in the composite attribute "SchedulingRule". */
+    private final static String CLASS_NAME_ATTRIBUTE = "className"; //$NON-NLS-1$
+
+    /** The attribute "state" in the composite attribute "SchedulingRule". */
+    private final static String STATE_ATTRIBUTE = "state"; //$NON-NLS-1$
+
+    /** The attribute "thread" in the composite attribute "SchedulingRule". */
+    private final static String THREAD_ATTRIBUTE = "thread"; //$NON-NLS-1$
+
+    /** The attribute "schedulingRule" in the composite attribute "SchedulingRule". */
+    private final static String SCHEDULING_RULE_ATTRIBUTE = "schedulingRule"; //$NON-NLS-1$
+
+    /** The attribute "canceled" in the composite attribute "SchedulingRule". */
+    private final static String CANCELED_ATTRIBUTE = "canceled"; //$NON-NLS-1$
 
     /** The MBean server connection. */
     private MBeanServerConnection connection;
 
     /** The JVM. */
-    private ActiveJvm jvm;
+    private final ActiveJvm jvm;
 
     /** The MBean notification. */
-    private IMBeanNotification mBeanNotification;
+    private final IMBeanNotification mBeanNotification;
 
     /** The monitored MXBean attribute groups. */
-    private List<IMonitoredMXBeanGroup> monitoredAttributeGroups;
+    private final List<IMonitoredMXBeanGroup> monitoredAttributeGroups;
 
     /** The previous process CPU time. */
     private long previousProcessCpuTime;
 
     /** The MXBeans. */
     @SuppressWarnings("rawtypes")
-    private Map<Class, Object> mxBeans;
+    private final Map<Class, Object> mxBeans;
 
     /** The heap list elements. */
     private Map<String, HeapElement> heapListElements;
 
     /** The thread list elements. */
     private Map<String, ThreadElement> threadListElements;
+
+    /** The jobs. */
+    private Map<String, EclipseJobElement> eclipseJobElements;
 
     /** The timer to update. */
     Timer timer;
@@ -129,26 +177,26 @@ public class MBeanServer implements IMBeanServer {
     private long previousSamplingTime;
 
     /** The previous thread process CPU time. */
-    private Map<Long, Long> previousThreadProcessCpuTime;
+    private final Map<Long, Long> previousThreadProcessCpuTime;
 
     /** The state indicating if handling only live objects. */
-    private boolean isLive;
+    private final boolean isLive;
 
     /** The state indicating if the jvm is reachable. */
     private boolean isJvmReachable;
 
     /** The MBean server change listeners. */
-    private List<IMBeanServerChangeListener> listeners;
+    private final List<IMBeanServerChangeListener> listeners;
 
     /** The previous stack trace. */
-    private Map<String, StackTraceElement[]> previousStackTraces;
+    private final Map<String, StackTraceElement[]> previousStackTraces;
 
     /** The JMX server URL. */
-    private JMXServiceURL jmxUrl;
+    private final JMXServiceURL jmxUrl;
 
     /**
      * The constructor.
-     * 
+     *
      * @param jmxUrl
      *            The JVM URL
      * @param jvm
@@ -158,18 +206,20 @@ public class MBeanServer implements IMBeanServer {
     protected MBeanServer(JMXServiceURL jmxUrl, ActiveJvm jvm) {
         this.jmxUrl = jmxUrl;
         this.jvm = jvm;
-        mxBeans = new HashMap<Class, Object>();
+        mxBeans = new HashMap<>();
         mBeanNotification = new MBeanNotification(jvm);
-        previousThreadProcessCpuTime = new HashMap<Long, Long>();
-        heapListElements = new LinkedHashMap<String, HeapElement>();
-        threadListElements = new LinkedHashMap<String, ThreadElement>();
+        previousThreadProcessCpuTime = new HashMap<>();
+        heapListElements = new LinkedHashMap<>();
+        threadListElements = new LinkedHashMap<>();
+        eclipseJobElements = new LinkedHashMap<>();
         isLive = true;
         isJvmReachable = false;
-        listeners = new CopyOnWriteArrayList<IMBeanServerChangeListener>();
+        listeners = new CopyOnWriteArrayList<>();
         previousSamplingTime = 0;
         samplingPeriod = 50;
-        previousStackTraces = new HashMap<String, StackTraceElement[]>();
-        monitoredAttributeGroups = new CopyOnWriteArrayList<IMonitoredMXBeanGroup>();
+        previousStackTraces = new HashMap<>();
+        monitoredAttributeGroups = new CopyOnWriteArrayList<>();
+        InstanceScope.INSTANCE.getNode(PREFERENCES_ID).addPreferenceChangeListener(this);
     }
 
     /*
@@ -179,10 +229,13 @@ public class MBeanServer implements IMBeanServer {
     public Set<ObjectName> queryNames(ObjectName objectName)
             throws JvmCoreException {
         if (!checkReachability()) {
-            return new HashSet<ObjectName>();
+            return new HashSet<>();
         }
 
         try {
+            if (jvm.isCurrentJvm()) {
+                return ManagementFactory.getPlatformMBeanServer().queryNames(objectName, null);
+            }
             return connection.queryNames(objectName, null);
         } catch (IOException e) {
             throw new JvmCoreException(IStatus.ERROR,
@@ -209,6 +262,9 @@ public class MBeanServer implements IMBeanServer {
         }
 
         try {
+            if (jvm.isCurrentJvm()) {
+                return ManagementFactory.getPlatformMBeanServer().getAttribute(objectName, attributeName);
+            }
             return connection.getAttribute(objectName, attributeName);
         } catch (JMException e) {
             throw new JvmCoreException(IStatus.ERROR, NLS.bind(
@@ -233,7 +289,11 @@ public class MBeanServer implements IMBeanServer {
         }
 
         try {
-            connection.setAttribute(objectName, attribute);
+            if (jvm.isCurrentJvm()) {
+                ManagementFactory.getPlatformMBeanServer().setAttribute(objectName, attribute);
+            } else {
+                connection.setAttribute(objectName, attribute);
+            }
         } catch (JMException e) {
             throw new JvmCoreException(IStatus.ERROR, NLS.bind(
                     Messages.setAttributeFailedMsg, attribute.getName()), e);
@@ -313,6 +373,9 @@ public class MBeanServer implements IMBeanServer {
         }
 
         try {
+            if (jvm.isCurrentJvm()) {
+                return ManagementFactory.getPlatformMBeanServer().getMBeanInfo(objectName);
+            }
             return connection.getMBeanInfo(objectName);
         } catch (JMException e) {
             throw new JvmCoreException(IStatus.ERROR,
@@ -368,6 +431,9 @@ public class MBeanServer implements IMBeanServer {
         }
 
         try {
+            if (jvm.isCurrentJvm()) {
+                return ManagementFactory.getPlatformMBeanServer().invoke(objectName, method, params, signatures);
+            }
             return connection.invoke(objectName, method, params, signatures);
         } catch (JMException e) {
             throw new JvmCoreException(IStatus.ERROR, NLS.bind(
@@ -385,7 +451,7 @@ public class MBeanServer implements IMBeanServer {
     public String[] getThreadNames() throws JvmCoreException {
         IThreadElement[] threads = getThreadCache();
 
-        List<String> threadNames = new ArrayList<String>();
+        List<String> threadNames = new ArrayList<>();
         for (IThreadElement thread : threads) {
             threadNames.add(thread.getThreadName());
         }
@@ -427,7 +493,7 @@ public class MBeanServer implements IMBeanServer {
         }
 
         long[] ids = threadMXBean.findDeadlockedThreads();
-        LinkedHashMap<String, ThreadElement> newThreadListElements = new LinkedHashMap<String, ThreadElement>();
+        LinkedHashMap<String, ThreadElement> newThreadListElements = new LinkedHashMap<>();
         List<ThreadInfo> allThreads = Arrays.asList(threadMXBean
                 .dumpAllThreads(true, false));
         Collections.reverse(allThreads);
@@ -452,7 +518,6 @@ public class MBeanServer implements IMBeanServer {
             long processCpuTime = threadMXBean.getThreadCpuTime(threadId);
             Long previousCpuTime = previousThreadProcessCpuTime.get(threadId);
             double cpuUsage = 0;
-            previousThreadProcessCpuTime.put(threadId, processCpuTime);
             if (previousCpuTime != null) {
                 cpuUsage = Math.min(
                         (processCpuTime - previousCpuTime) / 10000000d, 100);
@@ -468,7 +533,99 @@ public class MBeanServer implements IMBeanServer {
                 newThreadListElements.put(threadName, oldElement);
             }
         }
+
+        storeEclipseSchedulingRuleData(newThreadListElements, jvm);
+
         threadListElements = newThreadListElements;
+    }
+
+    @Override
+    public IEclipseJobElement[] getEclipseJobCache() {
+        Collection<EclipseJobElement> values = eclipseJobElements.values();
+        return values.toArray(new IEclipseJobElement[values.size()]);
+    }
+
+    @Override
+    public void refreshEclipseJobCache() throws JvmCoreException {
+        if (!checkReachability()) {
+            return;
+        }
+
+        ObjectName objectName = jvm.getMBeanServer().getObjectName(ECLIPSE_JOB_MANAGER_MXBEAN_NAME);
+        if (objectName == null) {
+            return;
+        }
+
+        Object arrayAttribute;
+        try {
+            arrayAttribute = jvm.getMBeanServer().getAttribute(objectName, JOBS_ATTRIBUTE);
+            if (!(arrayAttribute instanceof CompositeData[])) {
+                return;
+            }
+        } catch (JvmCoreException e) {
+            // not supported (target JVM is not eclipse)
+            return;
+        }
+
+        LinkedHashMap<String, EclipseJobElement> newEclipseJobElements = new LinkedHashMap<>();
+        for (CompositeData compositeAttribute : (CompositeData[]) arrayAttribute) {
+
+            // access EclipseJobCompositeData.name
+            Object attribute = compositeAttribute.get(NAME_ATTRIBUTE);
+            if (!(attribute instanceof String)) {
+                continue;
+            }
+            String name = (String) attribute;
+
+            // access EclipseJobCompositeData.className
+            attribute = compositeAttribute.get(CLASS_NAME_ATTRIBUTE);
+            if (!(attribute instanceof String)) {
+                continue;
+            }
+            String className = (String) attribute;
+
+            // access EclipseJobCompositeData.state
+            attribute = compositeAttribute.get(STATE_ATTRIBUTE);
+            if (!(attribute instanceof String)) {
+                continue;
+            }
+            String state = (String) attribute;
+
+            // access EclipseJobCompositeData.thread
+            attribute = compositeAttribute.get(THREAD_ATTRIBUTE);
+            if (!(attribute instanceof String)) {
+                continue;
+            }
+            String thread = (String) attribute;
+
+            // access EclipseJobCompositeData.schedulingRule
+            attribute = compositeAttribute.get(SCHEDULING_RULE_ATTRIBUTE);
+            if (!(attribute instanceof String)) {
+                continue;
+            }
+            String schedulingRule = (String) attribute;
+
+            // access EclipseJobCompositeData.canceled
+            attribute = compositeAttribute.get(CANCELED_ATTRIBUTE);
+            if (!(attribute instanceof Boolean)) {
+                continue;
+            }
+            boolean isCanceled = ((Boolean)attribute).booleanValue();
+
+            EclipseJobElement element = eclipseJobElements.get(name);
+            if (element == null) {
+                newEclipseJobElements.put(name, new EclipseJobElement(name, className, state, isCanceled, thread, schedulingRule));
+            } else {
+                element.setClassName(className);
+                element.setState(state);
+                element.setCanceled(isCanceled);
+                element.setThread(thread);
+                element.setSchedulingRule(schedulingRule);
+                newEclipseJobElements.put(name, element);
+            }
+        }
+
+        eclipseJobElements = newEclipseJobElements;
     }
 
     /*
@@ -568,14 +725,6 @@ public class MBeanServer implements IMBeanServer {
     }
 
     /*
-     * @see IMBeanServer#setUpdatePeriod(Integer)
-     */
-    @Override
-    public void setUpdatePeriod(Integer updatePeriod) {
-        startUpdateTimer(updatePeriod);
-    }
-
-    /*
      * @see IMBeanServer#addServerChangeListener(IMBeanServerChangeListener)
      */
     @Override
@@ -595,7 +744,7 @@ public class MBeanServer implements IMBeanServer {
 
     /**
      * Gets the object name instance without communicating with target JVM.
-     * 
+     *
      * @param name
      *            The object name
      * @return The object name instance
@@ -615,14 +764,18 @@ public class MBeanServer implements IMBeanServer {
 
     /**
      * Unregisters the MBean.
-     * 
+     *
      * @param objectName
      *            The object name
      */
     public void unregisterMBean(ObjectName objectName) {
         if (isJvmReachable) {
             try {
-                connection.unregisterMBean(objectName);
+                if (jvm.isCurrentJvm()) {
+                    ManagementFactory.getPlatformMBeanServer().unregisterMBean(objectName);
+                } else {
+                    connection.unregisterMBean(objectName);
+                }
             } catch (JMException e) {
                 // do nothing
             } catch (IOException e) {
@@ -668,7 +821,7 @@ public class MBeanServer implements IMBeanServer {
 
     /**
      * Gets the state.
-     * 
+     *
      * @return The profiler state
      */
     public ProfilerState getProfilerState() {
@@ -678,7 +831,7 @@ public class MBeanServer implements IMBeanServer {
 
     /**
      * Gets the sampling period.
-     * 
+     *
      * @return The sampling period
      */
     public Integer getSamplingPeriod() {
@@ -687,7 +840,7 @@ public class MBeanServer implements IMBeanServer {
 
     /**
      * Sets the sampling period.
-     * 
+     *
      * @param samplingPeriod
      *            The sampling period
      */
@@ -701,7 +854,7 @@ public class MBeanServer implements IMBeanServer {
 
     /**
      * Gets the JVM arguments.
-     * 
+     *
      * @return The JVM arguments
      */
     public String getJvmArguments() {
@@ -732,9 +885,14 @@ public class MBeanServer implements IMBeanServer {
         return buffer.toString();
     }
 
+    @Override
+    public void preferenceChange(PreferenceChangeEvent event) {
+        startUpdateTimer();
+    }
+
     /**
      * Adds the notification listener.
-     * 
+     *
      * @param objectName
      *            The object name
      * @param listener
@@ -745,8 +903,12 @@ public class MBeanServer implements IMBeanServer {
             NotificationListener listener) throws JvmCoreException {
         if (isJvmReachable) {
             try {
-                connection.addNotificationListener(objectName, listener, null,
-                        null);
+                if (jvm.isCurrentJvm()) {
+                    ManagementFactory.getPlatformMBeanServer().addNotificationListener(objectName, listener, null,
+                            null);
+                } else {
+                    connection.addNotificationListener(objectName, listener, null, null);
+                }
             } catch (InstanceNotFoundException e) {
                 throw new JvmCoreException(IStatus.ERROR,
                         Messages.subscribeMBeanNotificationFailedMsg, e);
@@ -759,7 +921,7 @@ public class MBeanServer implements IMBeanServer {
 
     /**
      * Removes the notification listener.
-     * 
+     *
      * @param objectName
      *            The object name
      * @param listener
@@ -770,7 +932,11 @@ public class MBeanServer implements IMBeanServer {
             NotificationListener listener) throws JvmCoreException {
         if (isJvmReachable) {
             try {
-                connection.removeNotificationListener(objectName, listener);
+                if (jvm.isCurrentJvm()) {
+                    ManagementFactory.getPlatformMBeanServer().removeNotificationListener(objectName, listener);
+                } else {
+                    connection.removeNotificationListener(objectName, listener);
+                }
             } catch (JMException e) {
                 throw new JvmCoreException(IStatus.ERROR,
                         Messages.unsubscribeMBeanNotificationFailedMsg, e);
@@ -783,7 +949,7 @@ public class MBeanServer implements IMBeanServer {
 
     /**
      * Fires the JVM model change event.
-     * 
+     *
      * @param e
      *            The JVM model changed event
      */
@@ -795,7 +961,7 @@ public class MBeanServer implements IMBeanServer {
 
     /**
      * Gets the runtime name with PID@HOSTNAME.
-     * 
+     *
      * @return The runtime name
      * @throws JvmCoreException
      */
@@ -823,31 +989,32 @@ public class MBeanServer implements IMBeanServer {
 
     /**
      * Connects to MBean server.
-     * 
-     * @param updatePeriod
-     * 
+     *
      * @throws JvmCoreException
      */
-    protected void connect(int updatePeriod) throws JvmCoreException {
-        connection = connectToMBeanServer(jmxUrl);
+    protected void connect() throws JvmCoreException {
+        if (!jvm.isCurrentJvm()) {
+            connection = connectToMBeanServer(jmxUrl);
+        }
         enableThreadContentionMonitoring();
 
         mxBeans.clear();
         previousThreadProcessCpuTime.clear();
         heapListElements.clear();
         threadListElements.clear();
+        eclipseJobElements.clear();
         isJvmReachable = true;
         listeners.clear();
         previousSamplingTime = 0;
         previousStackTraces.clear();
         monitoredAttributeGroups.clear();
 
-        startUpdateTimer(updatePeriod);
+        startUpdateTimer();
     }
 
     /**
      * Refreshes the MBean model.
-     * 
+     *
      * @throws JvmCoreException
      */
     protected void refresh() throws JvmCoreException {
@@ -895,11 +1062,12 @@ public class MBeanServer implements IMBeanServer {
             samplingTimer.cancel();
         }
         ((MBeanNotification) mBeanNotification).dispose();
+        InstanceScope.INSTANCE.getNode(PREFERENCES_ID).removePreferenceChangeListener(this);
     }
 
     /**
      * Gets the attribute numerical value.
-     * 
+     *
      * @param attributeObject
      *            The attribute object
      * @param attributeName
@@ -937,7 +1105,7 @@ public class MBeanServer implements IMBeanServer {
 
     /**
      * Connects to the MBean server in the given VM.
-     * 
+     *
      * @param url
      *            The JMX service URL
      * @return The MBean server connection
@@ -948,7 +1116,7 @@ public class MBeanServer implements IMBeanServer {
         JMXConnector jmxc;
         try {
             if (jvm.getUserName() != null && jvm.getPassword() != null) {
-                Map<String, String[]> env = new HashMap<String, String[]>();
+                Map<String, String[]> env = new HashMap<>();
                 env.put(JMXConnector.CREDENTIALS,
                         new String[] { jvm.getUserName(), jvm.getPassword() });
                 jmxc = JMXConnectorFactory.connect(url, env);
@@ -968,7 +1136,7 @@ public class MBeanServer implements IMBeanServer {
 
     /**
      * Enables the thread contention monitoring.
-     * 
+     *
      * @throws JvmCoreException
      */
     private void enableThreadContentionMonitoring() throws JvmCoreException {
@@ -987,7 +1155,7 @@ public class MBeanServer implements IMBeanServer {
 
     /**
      * Gets the MXBean.
-     * 
+     *
      * @param mxBeanClass
      *            The MXBean class
      * @param mxBeanName
@@ -998,6 +1166,10 @@ public class MBeanServer implements IMBeanServer {
     @SuppressWarnings("unchecked")
     private Object getMXBean(@SuppressWarnings("rawtypes") Class mxBeanClass,
             String mxBeanName) throws IOException {
+        if (jvm.isCurrentJvm()) {
+            return ManagementFactory.getPlatformMXBean(mxBeanClass);
+        }
+
         Object mxBean = mxBeans.get(mxBeanClass);
         if (mxBean == null && connection != null) {
             mxBean = newPlatformMXBeanProxy(connection, mxBeanName, mxBeanClass);
@@ -1008,14 +1180,14 @@ public class MBeanServer implements IMBeanServer {
 
     /**
      * Parses the given heap.
-     * 
+     *
      * @param heap
      *            The heap
      * @param maxNumberOfClasses
      *            The max number of classes
      */
     private void parseHeap(String heap, int maxNumberOfClasses) {
-        Map<String, HeapElement> newHeapElements = new LinkedHashMap<String, HeapElement>();
+        Map<String, HeapElement> newHeapElements = new LinkedHashMap<>();
 
         String[] lines = heap.split("\n"); //$NON-NLS-1$
         for (String line : lines) {
@@ -1061,7 +1233,7 @@ public class MBeanServer implements IMBeanServer {
 
     /**
      * Converts the class name. e.g "[I" to "int[]"
-     * 
+     *
      * @param className
      *            The class name
      * @return The class name
@@ -1075,7 +1247,7 @@ public class MBeanServer implements IMBeanServer {
 
     /**
      * Dumps the profile data into file.
-     * 
+     *
      * @param type
      *            The snapshot type
      * @param dumpFileName
@@ -1172,7 +1344,7 @@ public class MBeanServer implements IMBeanServer {
 
     /**
      * Gets the dump string.
-     * 
+     *
      * @param type
      *            The snapshot type
      * @return The dump string
@@ -1209,6 +1381,9 @@ public class MBeanServer implements IMBeanServer {
             for (ThreadElement element : threadListElements.values()) {
                 element.dump(buffer);
             }
+            for (EclipseJobElement element : eclipseJobElements.values()) {
+                element.dump(buffer);
+            }
             buffer.append("</thread-profile>"); //$NON-NLS-1$
         }
         return buffer.toString();
@@ -1216,10 +1391,14 @@ public class MBeanServer implements IMBeanServer {
 
     /**
      * Checks if the jvm is still reachable.
-     * 
+     *
      * @return True if the JVM is still reachable
      */
     synchronized private boolean checkReachability() {
+        if (jvm.isCurrentJvm()) {
+            return true;
+        }
+
         if (!isJvmReachable) {
             return false;
         }
@@ -1245,7 +1424,7 @@ public class MBeanServer implements IMBeanServer {
 
     /**
      * Samples the profiling data.
-     * 
+     *
      * @throws JvmCoreException
      */
     void sampleProfilingData() throws JvmCoreException {
@@ -1291,11 +1470,11 @@ public class MBeanServer implements IMBeanServer {
                 ThreadNode<MethodNode> hotSpotThreadNode = cpuModel
                         .getHotSpotThread(threadName);
                 if (callTreeThreadNode == null) {
-                    callTreeThreadNode = new ThreadNode<CallTreeNode>(
+                    callTreeThreadNode = new ThreadNode<>(
                             threadName);
                 }
                 if (hotSpotThreadNode == null) {
-                    hotSpotThreadNode = new ThreadNode<MethodNode>(threadName);
+                    hotSpotThreadNode = new ThreadNode<>(threadName);
                 }
 
                 updateCpuModel(callTreeThreadNode, hotSpotThreadNode,
@@ -1315,7 +1494,7 @@ public class MBeanServer implements IMBeanServer {
 
     /**
      * Gets the inverted stack trace.
-     * 
+     *
      * @param stackTrace
      *            The stack trace
      * @return The inverted stack trace
@@ -1331,7 +1510,7 @@ public class MBeanServer implements IMBeanServer {
 
     /**
      * Updates the CPU model.
-     * 
+     *
      * @param stackTrace
      *            The stack trace
      * @param callTreeThreadNode
@@ -1391,7 +1570,7 @@ public class MBeanServer implements IMBeanServer {
 
     /**
      * Updates the frame node.
-     * 
+     *
      * @param callTreeThreadNode
      *            The call tree thread node
      * @param currentFrameNode
@@ -1446,7 +1625,7 @@ public class MBeanServer implements IMBeanServer {
 
     /**
      * Updates the method node.
-     * 
+     *
      * @param hotSpotThreadNode
      *            The hot spot thread node
      * @param methodName
@@ -1475,7 +1654,7 @@ public class MBeanServer implements IMBeanServer {
 
     /**
      * Checks if the given class belongs to one of the packages list.
-     * 
+     *
      * @param className
      *            the class name (e.g. java.lang.String)
      * @param packages
@@ -1514,11 +1693,8 @@ public class MBeanServer implements IMBeanServer {
 
     /**
      * Starts the update timer.
-     * 
-     * @param updatePeriod
-     *            The update period
      */
-    private void startUpdateTimer(int updatePeriod) {
+    private void startUpdateTimer() {
         if (timer != null) {
             timer.cancel();
         }
@@ -1537,6 +1713,152 @@ public class MBeanServer implements IMBeanServer {
                 }
             }
         };
+        int updatePeriod = InstanceScope.INSTANCE.getNode(PREFERENCES_ID).getInt(UPDATE_PERIOD, DEFAULT_UPDATE_PERIOD);
         timer.schedule(timerTask, 0, updatePeriod);
+    }
+
+    private static void storeEclipseSchedulingRuleData(LinkedHashMap<String, ThreadElement> threadListElements,
+            ActiveJvm jvm) throws JvmCoreException {
+        ObjectName objectName = jvm.getMBeanServer().getObjectName(ECLIPSE_JOB_MANAGER_MXBEAN_NAME);
+        if (objectName == null) {
+            return;
+        }
+
+        Object compositeAttribute;
+        try {
+            compositeAttribute = jvm.getMBeanServer().getAttribute(objectName, SCHEDULING_RULE_COMPOSITE_ATTRIBUTE);
+            if (!(compositeAttribute instanceof CompositeData)) {
+                return;
+            }
+        } catch (JvmCoreException e) {
+            // not supported (target JVM is not eclipse)
+            return;
+        }
+
+        // access DeadlockDetector.graph
+        Object attribute = ((CompositeData) compositeAttribute).get(GRAPH_ATTRIBUTE);
+        if (!(attribute instanceof int[][])) {
+            return;
+        }
+        int[][] graph = (int[][]) attribute;
+        if (graph.length == 0) {
+            return;
+        }
+
+        // access DeadlockDetector.locks
+        attribute = ((CompositeData) compositeAttribute).get(LOCKS_ATTRIBUTE);
+        if (!(attribute instanceof String[])) {
+            return;
+        }
+        String[] locks = (String[]) attribute;
+
+        // access DeadlockDetector.lockThreads
+        attribute = ((CompositeData) compositeAttribute).get(LOCK_THREADS_ATTRIBUTE);
+        if (!(attribute instanceof String[])) {
+            return;
+        }
+        String[] lockThreads = (String[]) attribute;
+
+        if (graph.length != lockThreads.length || graph[0].length != locks.length) {
+            return;
+        }
+
+        storeEclipseSchedulingRuleData(threadListElements, graph, locks, lockThreads);
+    }
+
+    private static void storeEclipseSchedulingRuleData(LinkedHashMap<String, ThreadElement> threadListElements,
+            int[][] graph, String[] locks, String[] lockThreads) {
+
+        Map<String, String> schedulingRuleAndOwnerMap = new HashMap<>();
+
+        // set the waited scheduling rule and the held scheduling rules
+        for (int i = 0; i < lockThreads.length; i++) {
+            ThreadElement threadElement = threadListElements.get(lockThreads[i]);
+            if (threadElement == null) {
+                continue;
+            }
+
+            String waitedSchedulingRule = null;
+            List<String> heldSchedulingRules = new ArrayList<>();
+            for (int j = 0; j < graph[i].length; j++) {
+                int state = graph[i][j];
+                String lock = locks[j];
+                if (state == -1) {
+                    waitedSchedulingRule = lock;
+                } else if (state > 0) {
+                    heldSchedulingRules.add(lock);
+                    if (lock.startsWith(MULTI_RULE_HEADER)) {
+                        String[] multiRules = lock.substring(MULTI_RULE_HEADER.length(), lock.length() - 1).split(","); //$NON-NLS-1$
+                        for (String rule : multiRules) {
+                            schedulingRuleAndOwnerMap.put(rule, lockThreads[i]);
+                        }
+                    } else {
+                        schedulingRuleAndOwnerMap.put(lock, lockThreads[i]);
+                    }
+                }
+            }
+
+            if (waitedSchedulingRule != null) {
+                threadElement.setSchedulingRuleName(waitedSchedulingRule);
+            }
+
+            if (!heldSchedulingRules.isEmpty()) {
+                threadElement
+                        .setHeldSchedulingRules(heldSchedulingRules.toArray(new String[heldSchedulingRules.size()]));
+            }
+        }
+
+        // set the scheduling rule owner
+        for (String thread : lockThreads) {
+            ThreadElement threadElement = threadListElements.get(thread);
+            if (threadElement == null) {
+                continue;
+            }
+
+            String schedulingRule = threadElement.getSchedulingRuleName();
+            if (schedulingRule == null) {
+                continue;
+            }
+
+            String owner = searchSchedulingRuleOwner(schedulingRuleAndOwnerMap, schedulingRule);
+            threadElement.setSchedulingRuleOwnerName(owner);
+        }
+    }
+
+    private static String searchSchedulingRuleOwner(Map<String, String> schedulingRuleAndOwnerMap,
+            String schedulingRuleToSearch) {
+        /*
+         * It is known which thread holds which job scheduling rules, but it is unknown
+         * which thread is actually blocking the given scheduling rule, because each
+         * implementation of ISchedulingRule.isConflicting() dynamically determines
+         * whether the scheduling rules conflict.
+         */
+        String owner = schedulingRuleAndOwnerMap.get(schedulingRuleToSearch);
+        if (owner != null) {
+            /*
+             * If the job scheduling rule object is identical with the one the thread holds,
+             * it is likely that the thread is blocking the job scheduling rule.
+             */
+            return owner;
+        }
+
+        // try to collect possible owners by checking class type of job scheduling rule
+        List<String> candidates = new ArrayList<>();
+        String classNameToSearch = schedulingRuleToSearch.split("@")[0]; //$NON-NLS-1$
+        for (Entry<String, String> entry : schedulingRuleAndOwnerMap.entrySet()) {
+            String schedulingRule = entry.getKey();
+            String className = schedulingRule.split("@")[0]; //$NON-NLS-1$
+            if (classNameToSearch.equals(className)) {
+                candidates.add(entry.getValue());
+            }
+        }
+
+        if (candidates.size() == 1) {
+            return candidates.get(0);
+        } else if (candidates.size() > 1) {
+            return NLS.bind(Messages.jobSchedulingRuleOwnerCandidatesMsg, candidates.toString());
+        }
+
+        return Messages.jobSchedulingRuleOwnerUnknownMsg;
     }
 }

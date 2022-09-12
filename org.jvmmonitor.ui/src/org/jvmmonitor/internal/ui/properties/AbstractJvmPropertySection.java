@@ -335,6 +335,7 @@ abstract public class AbstractJvmPropertySection extends
     public void clearStatusLine() {
         IStatusLineManager manager = propertySheet.getViewSite()
                 .getActionBars().getStatusLineManager();
+        manager.setMessage(null);
 
         IContributionItem[] items = manager.getItems();
         for (IContributionItem item : items) {

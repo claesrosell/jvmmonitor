@@ -1,33 +1,32 @@
 /*******************************************************************************
- * Copyright (c) 2010 JVM Monitor project. All rights reserved. 
- * 
+ * Copyright (c) 2010 JVM Monitor project. All rights reserved.
+ *
  * This code is distributed under the terms of the Eclipse Public License v1.0
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
 package org.jvmmonitor.internal.agent;
 
 import org.jvmmonitor.internal.agent.asm.Label;
-import org.jvmmonitor.internal.agent.asm.MethodAdapter;
 import org.jvmmonitor.internal.agent.asm.MethodVisitor;
 import org.jvmmonitor.internal.agent.asm.Opcodes;
 
 /**
  * The method visitor.
  */
-public class MethodVisitorImpl extends MethodAdapter {
+public class MethodVisitorImpl extends MethodVisitor {
 
     /** The class name */
-    private String className;
+    private final String className;
 
     /** The method name */
-    private String methodName;
+    private final String methodName;
 
     /** The state indicating if this is the class initialization method. */
-    private boolean isClinit;
+    private final boolean isClinit;
 
     /**
      * The constructor.
-     * 
+     *
      * @param methodVisitor
      *            The method visitor
      * @param className
@@ -37,7 +36,7 @@ public class MethodVisitorImpl extends MethodAdapter {
      */
     public MethodVisitorImpl(MethodVisitor methodVisitor, String className,
             String methodName) {
-        super(methodVisitor);
+        super(Opcodes.ASM9, methodVisitor);
         this.className = className;
         this.methodName = methodName;
         isClinit = methodName.startsWith(Constants.METHOD_CLINIT);
@@ -97,7 +96,7 @@ public class MethodVisitorImpl extends MethodAdapter {
 
     /**
      * Instruments the method invocation.
-     * 
+     *
      * @param name
      *            The method name
      * @param args
@@ -123,6 +122,6 @@ public class MethodVisitorImpl extends MethodAdapter {
             visitLdcInsn(arg);
         }
         super.visitMethodInsn(Opcodes.INVOKESTATIC,
-                Constants.CLASS_CPU_PROFILER, name, desc);
+                Constants.CLASS_CPU_PROFILER, name, desc, false);
     }
 }

@@ -15,7 +15,6 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.views.properties.IPropertySheetPage;
 import org.eclipse.ui.views.properties.tabbed.ITabbedPropertySheetPageContributor;
-import org.eclipse.ui.views.properties.tabbed.TabbedPropertySheetPage;
 import org.jvmmonitor.internal.ui.IHelpContextIds;
 import org.jvmmonitor.internal.ui.actions.PreferencesAction;
 
@@ -72,12 +71,7 @@ public class JvmExplorer extends ViewPart implements
     @Override
     public Object getAdapter(@SuppressWarnings("rawtypes") Class adapter) {
         if (adapter == IPropertySheetPage.class) {
-            return new TabbedPropertySheetPage(this){
-                @Override
-                public void resizeScrolledComposite() {
-                    // no scroll bar except for section itself
-                }
-            };
+            return new JvmTabbedPropertySheetPage(this);
         }
         return super.getAdapter(adapter);
     }

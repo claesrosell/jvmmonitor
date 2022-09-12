@@ -39,13 +39,10 @@ public abstract class AbstractSashForm extends SashForm implements ISashForm {
      * 
      * @param parent
      *            The parent composite
-     * @param actionBars
-     *            The action bars
      * @param sashWeights
      *            The sash weight
      */
-    public AbstractSashForm(Composite parent, IActionBars actionBars,
-            int[] sashWeights) {
+    public AbstractSashForm(Composite parent, int[] sashWeights) {
         super(parent, SWT.HORIZONTAL);
         this.initialSashWeights = sashWeights;
 

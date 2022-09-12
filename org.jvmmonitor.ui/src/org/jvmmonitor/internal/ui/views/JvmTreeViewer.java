@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2010 JVM Monitor project. All rights reserved. 
- * 
+ * Copyright (c) 2010 JVM Monitor project. All rights reserved.
+ *
  * This code is distributed under the terms of the Eclipse Public License v1.0
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
@@ -80,7 +80,7 @@ public class JvmTreeViewer extends TreeViewer implements
 
     /**
      * The constructor.
-     * 
+     *
      * @param parent
      *            the parent composite
      * @param style
@@ -230,7 +230,7 @@ public class JvmTreeViewer extends TreeViewer implements
 
     /**
      * Creates the context menu.
-     * 
+     *
      * @param actionBars
      *            The action bars
      */
@@ -257,7 +257,7 @@ public class JvmTreeViewer extends TreeViewer implements
 
     /**
      * Configures the menus.
-     * 
+     *
      * @param manager
      *            The menu manager
      */
@@ -280,7 +280,7 @@ public class JvmTreeViewer extends TreeViewer implements
 
     /**
      * Updates the status line.
-     * 
+     *
      * @param selection
      *            the selection
      */
@@ -327,10 +327,7 @@ public class JvmTreeViewer extends TreeViewer implements
                 } else if (element instanceof IHost) {
                     IHost host = (IHost) element;
                     if (host.getName().equals(IHost.LOCALHOST)) {
-                        if (!JvmModel.getInstance().hasValidJdk()) {
-                            errorText.append(Messages.invalidJdkLocationMsg);
-                            errorImage = getErrorImage();
-                        } else if (host.getActiveJvms().isEmpty()) {
+                        if (host.getActiveJvms().isEmpty()) {
                             errorText.append(Messages.cannnotDetectJvmMsg);
                             errorImage = getErrorImage();
                         }
@@ -349,7 +346,7 @@ public class JvmTreeViewer extends TreeViewer implements
 
     /**
      * Gets the error image.
-     * 
+     *
      * @return The error image
      */
     Image getErrorImage() {

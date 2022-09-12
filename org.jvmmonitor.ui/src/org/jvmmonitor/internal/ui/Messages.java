@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2010 JVM Monitor project. All rights reserved. 
- * 
+ * Copyright (c) 2010 JVM Monitor project. All rights reserved.
+ *
  * This code is distributed under the terms of the Eclipse Public License v1.0
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
@@ -27,7 +27,10 @@ public final class Messages extends NLS {
         // do not instantiate
     }
 
-    // preference page
+    // preference page labels
+
+    /** */
+    public static String searchJvmPeriodLabel;
 
     /** */
     public static String updatePeriodLabel;
@@ -39,6 +42,32 @@ public final class Messages extends NLS {
     public static String timelineGroupLabel;
 
     /** */
+    public static String threadsGroupLabel;
+
+    /** */
+    public static String wideScopeThreadFilterLabel;
+
+    /** */
+    public static String memoryGroupLabel;
+
+    /** */
+    public static String maxNumberOfClassesLabel;
+
+    /** */
+    public static String wideScopeSWTResourceFilterLabel;
+
+    // preference page messages
+
+    /** */
+    public static String serachJvmPeriodNotEnteredMsg;
+
+    /** */
+    public static String illegalSearchJvmPeriodMsg;
+
+    /** */
+    public static String searchJvmPeriodOutOfRangeMsg;
+
+    /** */
     public static String updatePeriodNotEnteredMsg;
 
     /** */
@@ -46,16 +75,14 @@ public final class Messages extends NLS {
 
     /** */
     public static String updatePeriodOutOfRangeMsg;
-    
-    /** */
-    public static String threadsGroupLabel;
 
     /** */
-    public static String memoryGroupLabel;
-    
+    public static String enterMaxNumberOfClassesMsg;
+
     /** */
-    public static String wideScopeThreadFilterLabel;
-    
+    public static String maxNumberOfClassesInvalidMsg;
+
     /** */
-    public static String wideScopeSWTResourceFilterLabel;
+    public static String maxNumberOfClassesOutOfRangeMsg;
+
 }

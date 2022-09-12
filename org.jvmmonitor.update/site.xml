@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-   <feature url="features/org.jvmmonitor_4.15.0.qualifier.jar" id="org.jvmmonitor" version="4.15.0.qualifier">
-      <category name="JVM Monitor 4.15.0"/>
+   <feature url="features/org.jvmmonitor_4.21.0.qualifier.jar" id="org.jvmmonitor" version="4.21.0.qualifier">
+      <category name="JVM Monitor 4.21.0"/>
    </feature>
-   <category-def name="JVM Monitor 4.15.0" label="JVM Monitor 4.15.0"/>
+   <category-def name="JVM Monitor 4.21.0" label="JVM Monitor 4.21.0"/>
 </site>

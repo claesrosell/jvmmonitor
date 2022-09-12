@@ -1,10 +1,12 @@
 /*******************************************************************************
- * Copyright (c) 2010 JVM Monitor project. All rights reserved. 
- * 
+ * Copyright (c) 2010 JVM Monitor project. All rights reserved.
+ *
  * This code is distributed under the terms of the Eclipse Public License v1.0
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
 package org.jvmmonitor.internal.ui.properties.timeline;
+
+import static org.jvmmonitor.core.IPreferenceConstants.*;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -18,6 +20,7 @@ import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.osgi.util.NLS;
@@ -46,9 +49,12 @@ public class LoadChartSetAction extends AbstractChartSetAction {
             "name=.*Eden Space", "name=.*Survivor Space", "name=.*Tenured Gen", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             "name=.*Old Gen" }; //$NON-NLS-1$
 
+    /** The id for default chart set. */
+    private static final String DEFAULT_CHART_SET = "DefaultChartSet"; //$NON-NLS-1$
+
     /**
      * The constructor.
-     * 
+     *
      * @param section
      *            The property section
      */
@@ -94,7 +100,7 @@ public class LoadChartSetAction extends AbstractChartSetAction {
 
     /**
      * Loads the default chart set.
-     * 
+     *
      * @throws JvmCoreException
      */
     protected void loadDefaultChartSet() throws JvmCoreException {
@@ -109,7 +115,7 @@ public class LoadChartSetAction extends AbstractChartSetAction {
 
     /**
      * Stores the default chart set.
-     * 
+     *
      * @param defaultChartSet
      *            The default chart set
      */
@@ -120,7 +126,7 @@ public class LoadChartSetAction extends AbstractChartSetAction {
 
     /**
      * Gets the default chart set.
-     * 
+     *
      * @return The default chart set
      * @throws IOException
      * @throws WorkbenchException
@@ -139,7 +145,7 @@ public class LoadChartSetAction extends AbstractChartSetAction {
 
     /**
      * Gets the chart sets including predefined chart sets.
-     * 
+     *
      * @return The chart sets
      * @throws WorkbenchException
      * @throws IOException
@@ -154,7 +160,7 @@ public class LoadChartSetAction extends AbstractChartSetAction {
 
     /**
      * Loads the given chart set.
-     * 
+     *
      * @param chartSet
      *            The chart set
      * @throws JvmCoreException
@@ -187,7 +193,7 @@ public class LoadChartSetAction extends AbstractChartSetAction {
 
     /**
      * Loads the given memento of chart set.
-     * 
+     *
      * @param memento
      *            The memento
      * @throws JvmCoreException
@@ -227,7 +233,7 @@ public class LoadChartSetAction extends AbstractChartSetAction {
 
     /**
      * Gets the state indicating if the given attribute exists.
-     * 
+     *
      * @param objectName
      *            The object name
      * @param attributeName
@@ -252,7 +258,7 @@ public class LoadChartSetAction extends AbstractChartSetAction {
     /**
      * Loads the given predefined chat set. If the given chart set is not
      * predefined one, does nothing.
-     * 
+     *
      * @param chartSet
      *            The chart set
      * @throws JvmCoreException
@@ -268,7 +274,7 @@ public class LoadChartSetAction extends AbstractChartSetAction {
 
     /**
      * Loads the overview chart set.
-     * 
+     *
      * @throws JvmCoreException
      */
     private void loadOverviewChartSet() throws JvmCoreException {
@@ -299,7 +305,7 @@ public class LoadChartSetAction extends AbstractChartSetAction {
 
     /**
      * Loads the memory chart set.
-     * 
+     *
      * @throws JvmCoreException
      */
     private void loadMemoryChartSet() throws JvmCoreException {
@@ -337,7 +343,7 @@ public class LoadChartSetAction extends AbstractChartSetAction {
 
     /**
      * Gets the memory pool object names that contains the given filter text.
-     * 
+     *
      * @param filters
      *            The filters
      * @return The memory pool object names
@@ -345,7 +351,7 @@ public class LoadChartSetAction extends AbstractChartSetAction {
      */
     private Set<String> getMemoryPoolObjectNames(String[] filters)
             throws JvmCoreException {
-        Set<String> objectNames = new HashSet<String>();
+        Set<String> objectNames = new HashSet<>();
         try {
             for (ObjectName objectName : section
                     .getJvm()
@@ -372,7 +378,7 @@ public class LoadChartSetAction extends AbstractChartSetAction {
 
     /**
      * Saves the given chart sets that can be subset of previous chart sets.
-     * 
+     *
      * @param chartSets
      *            The chart sets
      * @throws WorkbenchException
@@ -400,13 +406,12 @@ public class LoadChartSetAction extends AbstractChartSetAction {
 
         StringWriter writer = new StringWriter();
         chartSetsMemento.save(writer);
-        Activator.getDefault().getPreferenceStore()
-                .setValue(CHART_SETS, writer.getBuffer().toString());
+        InstanceScope.INSTANCE.getNode(PREFERENCES_ID).put(CHART_SETS, writer.getBuffer().toString());
     }
 
     /**
      * Gets the RGB integer array corresponding to the given RGB string.
-     * 
+     *
      * @param rgbString
      *            The RGB string "r,g,b" (e.g. "225,225,0")
      * @return The RGB integer array

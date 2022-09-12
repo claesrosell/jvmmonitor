@@ -12,6 +12,7 @@ import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
+import org.jvmmonitor.core.IEclipseJobElement;
 import org.jvmmonitor.core.IThreadElement;
 import org.jvmmonitor.core.dump.IProfileInfo;
 import org.xml.sax.Attributes;
@@ -29,9 +30,15 @@ public class ThreadDumpSaxEventHandler extends DefaultHandler {
     /** The thread list elements. */
     private List<IThreadElement> threadListElements;
 
+    /** The eclipse job elements. */
+    private List<IEclipseJobElement> eclipseJobElements;
+
     /** The currently parsed thread. */
     private ThreadElement currentlyParsedThread;
 
+    /** The currently parsed job. */
+    private EclipseJobElement currentlyParsedJob;
+    
     /** The stack traces in currently parsed thread. */
     private List<StackTraceElement> stackTraceElements;
 
@@ -43,13 +50,16 @@ public class ThreadDumpSaxEventHandler extends DefaultHandler {
      * 
      * @param threadListElements
      *            The thread list elements
+     * @param eclipseJobElements
+     *            The eclipse job elements
      * @param monitor
      *            The progress monitor
      */
-    public ThreadDumpSaxEventHandler(List<IThreadElement> threadListElements,
+    public ThreadDumpSaxEventHandler(List<IThreadElement> threadListElements, List<IEclipseJobElement> eclipseJobElements,
             IProgressMonitor monitor) {
         this.monitor = monitor;
         this.threadListElements = threadListElements;
+        this.eclipseJobElements = eclipseJobElements;
     }
 
     /*
@@ -86,14 +96,28 @@ public class ThreadDumpSaxEventHandler extends DefaultHandler {
             String isSuspended = attributes.getValue("suspended"); //$NON-NLS-1$
             String isDeadlocked = attributes.getValue("deadlocked"); //$NON-NLS-1$
             String cpuUsage = attributes.getValue("cpuUsage"); //$NON-NLS-1$
-            currentlyParsedThread = new ThreadElement(threadName,
-                    State.valueOf(threadState), Long.parseLong(blockedTime),
-                    Long.parseLong(blockedCount), Long.parseLong(waitedTime),
-                    Long.parseLong(waitedCount), lockName, lockOwnerName,
-                    Boolean.parseBoolean(isSuspended),
-                    Boolean.parseBoolean(isDeadlocked),
-                    Double.parseDouble(cpuUsage));
+            String schedulingRuleName = attributes.getValue("schedulingRuleName"); //$NON-NLS-1$
+            String schedulingRuleOwnerName = attributes.getValue("schedulingRuleOwnerName"); //$NON-NLS-1$
+            String heldSchedulingRuleNames = attributes.getValue("heldSchedulingRuleNames"); //$NON-NLS-1$
+            currentlyParsedThread = new ThreadElement(threadName, State.valueOf(threadState),
+                    Long.parseLong(blockedTime), Long.parseLong(blockedCount), Long.parseLong(waitedTime),
+                    Long.parseLong(waitedCount), lockName, lockOwnerName, Boolean.parseBoolean(isSuspended),
+                    Boolean.parseBoolean(isDeadlocked), Double.parseDouble(cpuUsage), schedulingRuleName,
+                    schedulingRuleOwnerName, parseStringSeparatedByComma(heldSchedulingRuleNames));
             stackTraceElements = new ArrayList<StackTraceElement>();
+            return;
+        }
+
+        // job
+        if ("job".equals(name)) { //$NON-NLS-1$
+            String jobName = attributes.getValue("name"); //$NON-NLS-1$
+            String className = attributes.getValue("className"); //$NON-NLS-1$
+            String jobState = attributes.getValue("state"); //$NON-NLS-1$
+            String isCanceled = attributes.getValue("canceled"); //$NON-NLS-1$
+            String thread = attributes.getValue("thread"); //$NON-NLS-1$
+            String schedulingRule = attributes.getValue("schedulingRule"); //$NON-NLS-1$
+            currentlyParsedJob = new EclipseJobElement(jobName, className, jobState, Boolean.parseBoolean(isCanceled),
+                    thread, schedulingRule);
             return;
         }
 
@@ -110,6 +134,13 @@ public class ThreadDumpSaxEventHandler extends DefaultHandler {
         }
     }
 
+    private static String[] parseStringSeparatedByComma(String stringSeparatedByComma) {
+        if (stringSeparatedByComma == null) {
+            return new String[0];
+        }
+        return stringSeparatedByComma.split(", "); //$NON-NLS-1$
+    }
+
     /*
      * @see DefaultHandler#endElement(String, String, String)
      */
@@ -122,7 +153,9 @@ public class ThreadDumpSaxEventHandler extends DefaultHandler {
             currentlyParsedThread.setStackTrace(stackTraceElements
                     .toArray(new StackTraceElement[0]));
             threadListElements.add(currentlyParsedThread);
-        }
+        } else if ("job".equals(name)) { //$NON-NLS-1$
+            eclipseJobElements.add(currentlyParsedJob);
+        } 
     }
 
     /**

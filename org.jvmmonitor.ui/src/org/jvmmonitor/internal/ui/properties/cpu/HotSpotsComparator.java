@@ -36,7 +36,7 @@ public class HotSpotsComparator extends ViewerComparator {
     private int sortDirection;
 
     /** the column index */
-    private ColumnType columnType;
+    private final ColumnType columnType;
 
     /**
      * The constructor.
@@ -70,13 +70,15 @@ public class HotSpotsComparator extends ViewerComparator {
         if (columnType == ColumnType.Methods) {
             result = method1.getName().compareTo(method2.getName());
         } else if (columnType == ColumnType.TimeMs) {
-            result = (method1.getSelfTime() > method2.getSelfTime()) ? 1 : -1;
+            long time1 = method1.getSelfTime();
+            long time2 = method2.getSelfTime();
+            result = Long.compare(time1, time2);
         } else if (columnType == ColumnType.TimePercentage) {
-            result = (method1.getSelfTimeInPercentage() > method2
-                    .getSelfTimeInPercentage()) ? 1 : -1;
+            double percentage1 = method1.getSelfTimeInPercentage();
+            double percentage2 = method2.getSelfTimeInPercentage();
+            result = Double.compare(percentage1, percentage2);
         } else if (columnType == ColumnType.Count) {
-            result = (method1.getInvocationCount() > method2
-                    .getInvocationCount()) ? 1 : -1;
+            result = Integer.compare(method1.getInvocationCount(), method2.getInvocationCount());
         }
 
         if (sortDirection == SWT.DOWN) {

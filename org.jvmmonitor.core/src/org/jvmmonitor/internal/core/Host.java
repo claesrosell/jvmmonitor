@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2010 JVM Monitor project. All rights reserved. 
- * 
+ * Copyright (c) 2010 JVM Monitor project. All rights reserved.
+ *
  * This code is distributed under the terms of the Eclipse Public License v1.0
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
@@ -44,24 +44,24 @@ public class Host implements IHost {
     public static final String HOST_PROP_KEY = "Host"; //$NON-NLS-1$
 
     /** The host name. */
-    private String hostName;
+    private final String hostName;
 
     /** The terminated JVMs. */
-    private List<ITerminatedJvm> terminatedJvms;
+    private final List<ITerminatedJvm> terminatedJvms;
 
     /** The active JVMs. */
-    private List<IActiveJvm> activeJvms;
+    private final List<IActiveJvm> activeJvms;
 
     /**
      * The constructor.
-     * 
+     *
      * @param hostname
      *            The host name
      */
     public Host(String hostname) {
         this.hostName = hostname;
-        terminatedJvms = new CopyOnWriteArrayList<ITerminatedJvm>();
-        activeJvms = new CopyOnWriteArrayList<IActiveJvm>();
+        terminatedJvms = new CopyOnWriteArrayList<>();
+        activeJvms = new CopyOnWriteArrayList<>();
 
         saveHostProperties();
         refreshSnapshots();
@@ -80,7 +80,7 @@ public class Host implements IHost {
      */
     @Override
     public List<IJvm> getJvms() {
-        List<IJvm> jvms = new CopyOnWriteArrayList<IJvm>();
+        List<IJvm> jvms = new CopyOnWriteArrayList<>();
         jvms.addAll(activeJvms);
         jvms.addAll(terminatedJvms);
         return jvms;
@@ -103,19 +103,18 @@ public class Host implements IHost {
     }
 
     /*
-     * @see IHost#addRemoteActiveJvm(int, String, String, int)
+     * @see IHost#addRemoteActiveJvm(int, String, String)
      */
     @Override
     public IActiveJvm addRemoteActiveJvm(int port, String userName,
-            String password, int updatePeriod) throws JvmCoreException {
+            String password) throws JvmCoreException {
         for (IActiveJvm jvm : getActiveJvms()) {
             if (jvm.getPort() == port) {
                 return jvm;
             }
         }
 
-        IActiveJvm jvm = new ActiveJvm(port, userName, password, this,
-                updatePeriod);
+        IActiveJvm jvm = new ActiveJvm(port, userName, password, this);
         return addActiveJvm(jvm);
     }
 
@@ -203,7 +202,7 @@ public class Host implements IHost {
 
     /**
      * Gets the host directory.
-     * 
+     *
      * @return The host directory
      * @throws JvmCoreException
      */
@@ -220,7 +219,7 @@ public class Host implements IHost {
 
     /**
      * Adds the terminated JVM.
-     * 
+     *
      * @param pid
      *            The process ID.
      * @param port
@@ -244,7 +243,7 @@ public class Host implements IHost {
 
     /**
      * Adds the active JVM.
-     * 
+     *
      * @param jvm
      *            The active JVM.
      * @return The active JVM

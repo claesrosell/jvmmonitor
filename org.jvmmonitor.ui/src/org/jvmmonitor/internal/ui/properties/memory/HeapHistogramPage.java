@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2010 JVM Monitor project. All rights reserved. 
- * 
+ * Copyright (c) 2010 JVM Monitor project. All rights reserved.
+ *
  * This code is distributed under the terms of the Eclipse Public License v1.0
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
@@ -8,9 +8,6 @@ package org.jvmmonitor.internal.ui.properties.memory;
 
 import static org.jvmmonitor.internal.ui.IConstants.*;
 
-import java.lang.management.ManagementFactory;
-import java.lang.management.OperatingSystemMXBean;
-import java.lang.management.RuntimeMXBean;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -58,9 +55,6 @@ import org.jvmmonitor.ui.Activator;
 public class HeapHistogramPage extends Composite implements
         IConfigurableColumns, IPropertyChangeListener {
 
-    /** The 64 bit OS architecture. */
-    private static final String ARCH_64BIT = "64"; //$NON-NLS-1$
-
     /** The heap viewer. */
     TreeViewer heapViewer;
 
@@ -90,7 +84,7 @@ public class HeapHistogramPage extends Composite implements
 
     /**
      * The constructor.
-     * 
+     *
      * @param section
      *            The memory section
      * @param parent
@@ -123,7 +117,7 @@ public class HeapHistogramPage extends Composite implements
 
     /**
      * The constructor.
-     * 
+     *
      * @param parent
      *            The parent composite
      * @param actionBars
@@ -139,7 +133,7 @@ public class HeapHistogramPage extends Composite implements
      */
     @Override
     public List<String> getColumns() {
-        ArrayList<String> columnLabels = new ArrayList<String>();
+        ArrayList<String> columnLabels = new ArrayList<>();
         HeapColumn[] values = HeapColumn.values();
         for (HeapColumn value : values) {
             columnLabels.add(value.label);
@@ -195,7 +189,7 @@ public class HeapHistogramPage extends Composite implements
 
     /**
      * Sets the heap input.
-     * 
+     *
      * @param heapInput
      *            The heap input
      */
@@ -218,7 +212,7 @@ public class HeapHistogramPage extends Composite implements
                 .getJvm().getPid()), getId()) {
             @Override
             protected void refreshModel(IProgressMonitor monitor) {
-                if (!isSupported() || !isVisible) {
+                if (!isVisible) {
                     return;
                 }
                 try {
@@ -237,9 +231,8 @@ public class HeapHistogramPage extends Composite implements
                 IActiveJvm jvm = section.getJvm();
                 boolean isConnected = jvm != null && jvm.isConnected();
                 boolean isRemote = jvm != null && jvm.isRemote();
-                boolean isSupported = isSupported();
                 if (!heapViewer.getControl().isDisposed()
-                        && heapViewer.getControl().isVisible() && isSupported) {
+                        && heapViewer.getControl().isVisible()) {
                     heapViewer.refresh();
                 }
                 if (!isDisposed()) {
@@ -248,12 +241,10 @@ public class HeapHistogramPage extends Composite implements
 
                 dumpHprofAction.setEnabled(isConnected);
                 dumpHeapAction.setEnabled(!section.hasErrorMessage()
-                        && !isRemote && isSupported);
-                refreshAction.setEnabled(isConnected && !isRemote
-                        && isSupported);
+                        && !isRemote);
+                refreshAction.setEnabled(isConnected && !isRemote);
                 garbageCollectorAction.setEnabled(isConnected);
-                clearHeapDeltaAction.setEnabled(isConnected && !isRemote
-                        && isSupported);
+                clearHeapDeltaAction.setEnabled(isConnected && !isRemote);
             }
         }.schedule();
     }
@@ -277,7 +268,7 @@ public class HeapHistogramPage extends Composite implements
 
     /**
      * Adds the tool bar actions.
-     * 
+     *
      * @param manager
      *            The tool bar manager
      */
@@ -304,7 +295,7 @@ public class HeapHistogramPage extends Composite implements
 
     /**
      * Removes the tool bar actions.
-     * 
+     *
      * @param manager
      *            The tool bar manager
      */
@@ -319,7 +310,7 @@ public class HeapHistogramPage extends Composite implements
 
     /**
      * Updates the local tool bar.
-     * 
+     *
      * @param activated
      *            <tt>true</tt> if this tab item is activated
      */
@@ -337,7 +328,7 @@ public class HeapHistogramPage extends Composite implements
 
     /**
      * Initializes the heap histogram page.
-     * 
+     *
      * @param actionBars
      *            The action bars
      */
@@ -361,36 +352,8 @@ public class HeapHistogramPage extends Composite implements
     }
 
     /**
-     * Gets the state indicating if heap histogram is supported.
-     * <p>
-     * WORKAROUND: Heap histogram is disabled on 64bit OS when monitoring
-     * eclipse itself, due to the issue that the method heapHisto() of the class
-     * HotSpotVirtualMachine causes continuously increasing the committed heap
-     * memory.
-     * 
-     * @return <tt>true</tt> if heap histogram is supported
-     */
-    boolean isSupported() {
-        IActiveJvm jvm = section.getJvm();
-        if (jvm == null) {
-            return false;
-        }
-
-        OperatingSystemMXBean osMBean = ManagementFactory
-                .getOperatingSystemMXBean();
-        RuntimeMXBean runtimeMBean = ManagementFactory.getRuntimeMXBean();
-        if (osMBean.getArch().contains(ARCH_64BIT)
-                && runtimeMBean.getName()
-                        .contains(String.valueOf(jvm.getPid()))) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
      * Creates the context menu.
-     * 
+     *
      * @param actionBars
      *            The action bars
      */
@@ -449,12 +412,12 @@ public class HeapHistogramPage extends Composite implements
      * Loads the columns preference.
      */
     private void loadColumnsPreference() {
-        columns = new LinkedHashMap<String, Boolean>();
+        columns = new LinkedHashMap<>();
         String value = Activator.getDefault().getPreferenceStore()
                 .getString(getId());
         if (value.isEmpty()) {
             for (HeapColumn column : HeapColumn.values()) {
-                columns.put(column.label, true);
+                columns.put(column.label, Boolean.TRUE);
             }
         } else {
             setColumns(value);
@@ -463,7 +426,7 @@ public class HeapHistogramPage extends Composite implements
 
     /**
      * Sets the columns with given column order and visibility.
-     * 
+     *
      * @param columnData
      *            The column order and visibility
      */
@@ -472,7 +435,7 @@ public class HeapHistogramPage extends Composite implements
         for (String column : columnData.split(",")) { //$NON-NLS-1$
             String[] elemnets = column.split("="); //$NON-NLS-1$
             String columnName = elemnets[0];
-            boolean columnVisibility = Boolean.valueOf(elemnets[1]);
+            Boolean columnVisibility = Boolean.valueOf(elemnets[1]);
             columns.put(columnName, columnVisibility);
         }
     }
@@ -517,7 +480,7 @@ public class HeapHistogramPage extends Composite implements
 
     /**
      * Sorts the tree with given column.
-     * 
+     *
      * @param treeColumn
      *            the tree column
      */

@@ -1,16 +1,19 @@
 /*******************************************************************************
- * Copyright (c) 2010 JVM Monitor project. All rights reserved. 
- * 
+ * Copyright (c) 2010 JVM Monitor project. All rights reserved.
+ *
  * This code is distributed under the terms of the Eclipse Public License v1.0
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
 package org.jvmmonitor.internal.ui.properties.timeline;
+
+import static org.jvmmonitor.core.IPreferenceConstants.*;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.List;
 
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.window.Window;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.ISharedImages;
@@ -29,7 +32,7 @@ public class SaveChartSetAsAction extends AbstractChartSetAction {
 
     /**
      * The constructor.
-     * 
+     *
      * @param section
      *            The property section
      */
@@ -72,7 +75,7 @@ public class SaveChartSetAsAction extends AbstractChartSetAction {
 
     /**
      * Performs saving chart set.
-     * 
+     *
      * @param newChartSet
      *            The specified new chart set
      * @param chartSets
@@ -105,13 +108,12 @@ public class SaveChartSetAsAction extends AbstractChartSetAction {
 
         StringWriter writer = new StringWriter();
         chartSetsMemento.save(writer);
-        Activator.getDefault().getPreferenceStore()
-                .setValue(CHART_SETS, writer.getBuffer().toString());
+        InstanceScope.INSTANCE.getNode(PREFERENCES_ID).put(CHART_SETS, writer.getBuffer().toString());
     }
 
     /**
      * Adds the new chart set to the given memento.
-     * 
+     *
      * @param memento
      *            The memento
      * @param chartSet
@@ -138,7 +140,7 @@ public class SaveChartSetAsAction extends AbstractChartSetAction {
 
     /**
      * Gets the RGB string corresponding to the given RGB integer array.
-     * 
+     *
      * @param rgb
      *            The RGB integer array
      * @return The RGB string "r,g,b" (e.g. "225,225,0")

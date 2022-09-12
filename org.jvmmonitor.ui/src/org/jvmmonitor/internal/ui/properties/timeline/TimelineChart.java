@@ -1,10 +1,12 @@
 /*******************************************************************************
- * Copyright (c) 2010 JVM Monitor project. All rights reserved. 
- * 
+ * Copyright (c) 2010 JVM Monitor project. All rights reserved.
+ *
  * This code is distributed under the terms of the Eclipse Public License v1.0
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
 package org.jvmmonitor.internal.ui.properties.timeline;
+
+import static org.jvmmonitor.core.IPreferenceConstants.*;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -13,6 +15,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.osgi.util.NLS;
@@ -27,7 +30,6 @@ import org.eclipse.ui.forms.widgets.ExpandableComposite;
 import org.jvmmonitor.core.mbean.IMonitoredMXBeanAttribute;
 import org.jvmmonitor.core.mbean.IMonitoredMXBeanGroup;
 import org.jvmmonitor.core.mbean.IMonitoredMXBeanGroup.AxisUnit;
-import org.jvmmonitor.internal.ui.IConstants;
 import org.jvmmonitor.internal.ui.RefreshJob;
 import org.jvmmonitor.ui.Activator;
 import org.swtchart.Chart;
@@ -48,23 +50,23 @@ public class TimelineChart extends Chart implements IPropertyChangeListener {
     private RefreshJob refreshJob;
 
     /** The attribute group. */
-    private IMonitoredMXBeanGroup attributeGroup;
+    private final IMonitoredMXBeanGroup attributeGroup;
 
     /** The section id. */
-    private String sectionId;
+    private final String sectionId;
 
     /** The section. */
-    private ExpandableComposite section;
+    private final ExpandableComposite section;
 
     /** The colors. */
-    private List<Color> colors;
+    private final List<Color> colors;
 
     /** The marker. */
     Marker marker;
 
     /**
      * The constructor.
-     * 
+     *
      * @param parent
      *            The parent composite
      * @param section
@@ -82,7 +84,7 @@ public class TimelineChart extends Chart implements IPropertyChangeListener {
         this.section = section;
         this.attributeGroup = group;
         this.sectionId = sectionId;
-        colors = new ArrayList<Color>();
+        colors = new ArrayList<>();
 
         createChart(parent);
         Activator.getDefault().getPreferenceStore()
@@ -96,7 +98,7 @@ public class TimelineChart extends Chart implements IPropertyChangeListener {
      */
     @Override
     public void propertyChange(PropertyChangeEvent event) {
-        if (IConstants.LEGEND_VISIBILITY.equals(event.getProperty())
+        if (LEGEND_VISIBILITY.equals(event.getProperty())
                 && !isDisposed()) {
             getLegend().setVisible((Boolean) (event.getNewValue()));
             redraw();
@@ -122,7 +124,7 @@ public class TimelineChart extends Chart implements IPropertyChangeListener {
 
     /**
      * Gets the monitored attribute group.
-     * 
+     *
      * @return The monitored attribute group
      */
     public IMonitoredMXBeanGroup getAttributeGroup() {
@@ -152,7 +154,7 @@ public class TimelineChart extends Chart implements IPropertyChangeListener {
 
     /**
      * Gets the section.
-     * 
+     *
      * @return The section
      */
     public ExpandableComposite getSection() {
@@ -161,7 +163,7 @@ public class TimelineChart extends Chart implements IPropertyChangeListener {
 
     /**
      * Adds the monitored series.
-     * 
+     *
      * @param attribute
      *            The monitored attribute
      * @return The series
@@ -179,7 +181,7 @@ public class TimelineChart extends Chart implements IPropertyChangeListener {
 
     /**
      * Sets the color.
-     * 
+     *
      * @param series
      *            The series
      * @param rgb
@@ -198,7 +200,7 @@ public class TimelineChart extends Chart implements IPropertyChangeListener {
 
     /**
      * Gets the stored color corresponding to the given RGB.
-     * 
+     *
      * @param rgb
      *            The RGB
      * @return The stored color corresponding to the given RGB, or <tt>null</tt>
@@ -216,7 +218,7 @@ public class TimelineChart extends Chart implements IPropertyChangeListener {
 
     /**
      * Creates the chart.
-     * 
+     *
      * @param parent
      *            The parent composite
      */
@@ -232,9 +234,9 @@ public class TimelineChart extends Chart implements IPropertyChangeListener {
         getAxisSet().getYAxis(0).getTitle().setVisible(false);
 
         getLegend().setPosition(SWT.BOTTOM);
-        getLegend().setVisible(
-                Activator.getDefault().getPreferenceStore()
-                        .getBoolean(IConstants.LEGEND_VISIBILITY));
+        boolean isVisible = InstanceScope.INSTANCE.getNode(PREFERENCES_ID).getBoolean(LEGEND_VISIBILITY,
+                DEFAULT_LEGEND_VISIBILITY);
+        getLegend().setVisible(isVisible);
 
         MyMouseListener plotAreaListener = new MyMouseListener(getPlotArea());
         getPlotArea().addListener(SWT.MouseMove, plotAreaListener);
@@ -303,7 +305,7 @@ public class TimelineChart extends Chart implements IPropertyChangeListener {
 
     /**
      * Gets the Y series with given attribute.
-     * 
+     *
      * @param attribute
      *            The attribute
      * @return The Y Series
@@ -355,7 +357,7 @@ public class TimelineChart extends Chart implements IPropertyChangeListener {
 
     /**
      * Gets the series ID.
-     * 
+     *
      * @param attribute
      *            The monitored attribute
      * @return The series ID
@@ -382,11 +384,11 @@ public class TimelineChart extends Chart implements IPropertyChangeListener {
     private class MyMouseListener implements Listener {
 
         /** The control to add listener. */
-        private Control control;
+        private final Control control;
 
         /**
          * The constructor.
-         * 
+         *
          * @param control
          *            The control to add listener
          */

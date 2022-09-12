@@ -6,15 +6,16 @@
  *******************************************************************************/
 package org.jvmmonitor.internal.agent;
 
-import org.jvmmonitor.internal.agent.asm.ClassAdapter;
+import org.jvmmonitor.internal.agent.asm.ClassVisitor;
 import org.jvmmonitor.internal.agent.asm.ClassWriter;
 import org.jvmmonitor.internal.agent.asm.MethodVisitor;
+import org.jvmmonitor.internal.agent.asm.Opcodes;
 
 /**
  * The class visitor.
  */
 @SuppressWarnings("nls")
-public class ClassVisitorImpl extends ClassAdapter {
+public class ClassVisitorImpl extends ClassVisitor {
 
     /** the class name */
     private String className;
@@ -28,7 +29,7 @@ public class ClassVisitorImpl extends ClassAdapter {
      *            the class name
      */
     protected ClassVisitorImpl(ClassWriter writer, String className) {
-        super(writer);
+        super(Opcodes.ASM9, writer);
         this.className = className;
     }
 

@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2011 JVM Monitor project. All rights reserved. 
- * 
+ * Copyright (c) 2011 JVM Monitor project. All rights reserved.
+ *
  * This code is distributed under the terms of the Eclipse Public License v1.0
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
@@ -33,6 +33,7 @@ import org.jvmmonitor.internal.ui.RefreshJob;
 import org.jvmmonitor.internal.ui.actions.PreferencesAction;
 import org.jvmmonitor.internal.ui.actions.RefreshAction;
 import org.jvmmonitor.internal.ui.actions.ToggleOrientationAction;
+import org.jvmmonitor.internal.ui.properties.AbstractJvmPropertySection;
 import org.jvmmonitor.internal.ui.properties.AbstractSashForm;
 import org.jvmmonitor.internal.ui.properties.StackTraceViewer;
 import org.jvmmonitor.ui.Activator;
@@ -42,44 +43,39 @@ import org.jvmmonitor.ui.Activator;
  */
 public class SWTResourcesPage extends AbstractSashForm {
 
-    /** The sash weights. */
     private static final int[] SASH_WEIGHTS = new int[] { 45, 55 };
 
-    /** The layout menu id. */
     private static final String LAYOUT_MENU_ID = "layout"; //$NON-NLS-1$
 
-    /** The resource filtered viewer. */
-    SWTResourceFilteredTree resourceFilteredTree;
+    private SWTResourceFilteredTree resourceFilteredTree;
 
-    /** The stack trace viewer. */
-    StackTraceViewer stackTraceViewer;
+    private StackTraceViewer stackTraceViewer;
 
-    /** The memory section. */
-    MemorySection section;
+    private final AbstractJvmPropertySection section;
 
-    /** The action to refresh section. */
-    RefreshAction refreshAction;
+    private ClearSWTResourceAction clearSWTResourceAction;
 
-    /** The action to clear SWT resource action. */
-    ClearSWTResourceAction clearSWTResourceAction;
+    private RefreshAction refreshAction;
 
-    /** The layout menu. */
     private MenuManager layoutMenu;
+
+    private final IActionBars actionBars;
 
     /**
      * The constructor.
      * 
      * @param section
-     *            The memory section
+     *            The property section
      * @param tabFolder
      *            The tab folder
      * @param actionBars
      *            The action bars
      */
-    public SWTResourcesPage(MemorySection section, final CTabFolder tabFolder,
+    public SWTResourcesPage(AbstractJvmPropertySection section, final CTabFolder tabFolder,
             IActionBars actionBars) {
-        super(tabFolder, actionBars, SASH_WEIGHTS);
+        super(tabFolder, SASH_WEIGHTS);
         this.section = section;
+        this.actionBars = actionBars;
 
         createSashFormControls(this, actionBars);
         setWeights(initialSashWeights);
@@ -105,12 +101,8 @@ public class SWTResourcesPage extends AbstractSashForm {
         });
     }
 
-    /*
-     * @see AbstractSashForm#createSashFormControls(SashForm, IActionBars)
-     */
     @Override
-    protected void createSashFormControls(SashForm sashForm,
-            IActionBars actionBars) {
+    protected void createSashFormControls(SashForm sashForm, IActionBars actionBars) {
         resourceFilteredTree = new SWTResourceFilteredTree(sashForm, actionBars);
         TreeViewer resourceViewer = resourceFilteredTree.getViewer();
         resourceViewer.setContentProvider(new SWTResourceContentProvider(
@@ -140,8 +132,7 @@ public class SWTResourcesPage extends AbstractSashForm {
     protected void refresh(final boolean force) {
         final boolean isVisible = isVisible();
 
-        new RefreshJob(NLS.bind(Messages.refreshMemorySectionJobLabel, section
-                .getJvm().getPid()), toString()) {
+        new RefreshJob(NLS.bind(Messages.refreshMemorySectionJobLabel, section.getJvm().getPid()), toString()) {
             @Override
             protected void refreshModel(IProgressMonitor monitor) {
                 try {
@@ -160,79 +151,70 @@ public class SWTResourcesPage extends AbstractSashForm {
             protected void refreshUI() {
                 IActiveJvm jvm = section.getJvm();
                 boolean isConnected = jvm != null && jvm.isConnected();
+                refreshAction.setEnabled(isConnected);
+                clearSWTResourceAction.setEnabled(isConnected);
 
                 if (!isDisposed()) {
                     refreshBackground();
-                }
-                refreshAction.setEnabled(isConnected);
-                clearSWTResourceAction.setEnabled(isConnected);
-                if (!force && section.isRefreshSuspended() || !isVisible) {
-                    return;
-                }
-
-                TreeViewer resourceViewer = resourceFilteredTree.getViewer();
-                if (!resourceViewer.getControl().isDisposed()) {
-                    resourceViewer.refresh();
-                    if (jvm != null) {
-                        resourceFilteredTree.updateStatusLine(jvm
-                                .getSWTResourceMonitor().getResources());
+                    if (!force && section.isRefreshSuspended() || !isVisible) {
+                        return;
                     }
 
-                    // select the first item if no item is selected
-                    if (resourceViewer.getSelection().isEmpty()) {
-                        TreeItem[] items = resourceViewer.getTree().getItems();
-                        if (items != null && items.length > 0) {
-                            resourceViewer.getTree().select(items[0]);
-                            stackTraceViewer.setInput(resourceViewer
-                                    .getSelection());
-                        } else {
-                            stackTraceViewer.setInput(null);
-                        }
-                    }
-                }
-                if (!stackTraceViewer.getControl().isDisposed()) {
-                    stackTraceViewer.refresh();
+                    doRefreshUI();
                 }
             }
         }.schedule();
     }
 
+    private void doRefreshUI() {
+        TreeViewer resourceViewer = resourceFilteredTree.getViewer();
+        if (!resourceViewer.getControl().isDisposed()) {
+            resourceViewer.refresh();
+            IActiveJvm jvm = section.getJvm();
+            if (jvm != null) {
+                resourceFilteredTree.updateStatusLine(jvm.getSWTResourceMonitor().getResources());
+            }
+
+            // select the first item if no item is selected
+            if (resourceViewer.getSelection().isEmpty()) {
+                TreeItem[] items = resourceViewer.getTree().getItems();
+                if (items != null && items.length > 0) {
+                    resourceViewer.getTree().select(items[0]);
+                    stackTraceViewer.setInput(resourceViewer.getSelection());
+                } else {
+                    stackTraceViewer.setInput(null);
+                }
+            }
+        }
+        if (!stackTraceViewer.getControl().isDisposed()) {
+            stackTraceViewer.refresh();
+        }
+    }
+
     /**
-     * Sets the SWT resource input.
-     * 
+     * Sets the input.
+     *
      * @param input
-     *            The SWT resource input
+     *            The input
      */
-    protected void setInput(ISWTResorceInput input) {
+    public void setInput(Object input) {
         if (!section.isRefreshSuspended()) {
             resourceFilteredTree.getViewer().setInput(input);
         }
     }
 
-    /**
-     * Invoked when section is deactivated.
-     */
-    protected void deactivated() {
+    void deactivated() {
         Job.getJobManager().cancel(toString());
     }
 
-    /**
-     * Refreshes the background.
-     */
     void refreshBackground() {
         IActiveJvm jvm = section.getJvm();
         boolean isConnected = jvm != null && jvm.isConnected();
         section.refreshBackground(getChildren(), isConnected);
     }
 
-    /**
-     * Updates the local tool bar.
-     * 
-     * @param activated
-     *            <tt>true</tt> if this tab item is activated
-     */
     void updateLocalToolBar(boolean activated) {
-        IToolBarManager manager = section.getActionBars().getToolBarManager();
+        IToolBarManager manager = actionBars.getToolBarManager();
         if (activated) {
             addToolBarActions(manager);
         } else {
@@ -240,17 +222,11 @@ public class SWTResourcesPage extends AbstractSashForm {
         }
 
         manager.update(false);
-        section.getActionBars().updateActionBars();
+        actionBars.updateActionBars();
     }
 
-    /**
-     * Updates the local menus.
-     * 
-     * @param activated
-     *            <tt>true</tt> if this tab item is activated
-     */
-    void updateLocalMenus(boolean activated) {
-        IMenuManager manager = section.getActionBars().getMenuManager();
+    private void updateLocalMenus(boolean activated) {
+        IMenuManager manager = actionBars.getMenuManager();
         if (activated) {
             addLocalMenus(manager);
         } else {
@@ -258,12 +234,6 @@ public class SWTResourcesPage extends AbstractSashForm {
         }
     }
 
-    /**
-     * Adds the tool bar actions.
-     * 
-     * @param manager
-     *            The tool bar manager
-     */
     void addToolBarActions(IToolBarManager manager) {
         if (manager.find(SEPARATOR_ID) == null) {
             manager.add(new Separator(SEPARATOR_ID));
@@ -276,24 +246,12 @@ public class SWTResourcesPage extends AbstractSashForm {
         }
     }
 
-    /**
-     * Removes the tool bar actions.
-     * 
-     * @param manager
-     *            The tool bar manager
-     */
     void removeToolBarActions(IToolBarManager manager) {
         manager.remove(SEPARATOR_ID);
         manager.remove(refreshAction.getId());
         manager.remove(clearSWTResourceAction.getId());
     }
 
-    /**
-     * Adds the local menus.
-     * 
-     * @param manager
-     *            The menu manager
-     */
     void addLocalMenus(IMenuManager manager) {
         if (manager.find(layoutMenu.getId()) == null) {
             if (manager.find(PreferencesAction.class.getName()) != null) {
@@ -311,23 +269,12 @@ public class SWTResourcesPage extends AbstractSashForm {
         }
     }
 
-    /**
-     * Removes the local menus.
-     * 
-     * @param manager
-     *            The menu manager
-     */
     void removeLocalMenus(IMenuManager manager) {
         manager.remove(layoutMenu);
     }
 
-    /**
-     * Creates the actions.
-     */
     private void createActions() {
-        refreshAction = new RefreshAction(section) {
-            // to have different action id from one in heap histogram
-        };
+        refreshAction = new RefreshAction(section);
         clearSWTResourceAction = new ClearSWTResourceAction(this, section);
         layoutMenu = new MenuManager(Messages.layoutLabel, LAYOUT_MENU_ID);
     }

@@ -18,9 +18,12 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jdt.ui.actions.JdtActionConstants;
+import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds;
+import org.eclipse.jface.action.IContributionItem;
+import org.eclipse.jface.action.StatusLineContributionItem;
 import org.eclipse.jface.dialogs.IPageChangedListener;
 import org.eclipse.jface.dialogs.PageChangedEvent;
+import org.eclipse.jface.util.Util;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -467,6 +470,12 @@ public class CpuDumpEditor extends AbstractDumpEditor implements
         if (tree == null) {
             setContentDescription(""); //$NON-NLS-1$
         }
+
+        for (IContributionItem item : getEditorSite().getActionBars().getStatusLineManager().getItems()) {
+            if (item instanceof StatusLineContributionItem) {
+                ((StatusLineContributionItem) item).setText(Util.ZERO_LENGTH_STRING);
+            }
+        }
     }
 
     /**
@@ -509,7 +518,7 @@ public class CpuDumpEditor extends AbstractDumpEditor implements
      */
     private void contributeToActionBars() {
         IActionBars actionBars = getEditorSite().getActionBars();
-        actionBars.setGlobalActionHandler(JdtActionConstants.OPEN,
+        actionBars.setGlobalActionHandler(IJavaEditorActionDefinitionIds.OPEN_EDITOR,
                 new OpenDeclarationAction());
         actionBars.setGlobalActionHandler(ActionFactory.FIND.getId(),
                 new FindAction());

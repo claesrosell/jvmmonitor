@@ -7,9 +7,7 @@
 package org.jvmmonitor.core;
 
 /**
- * The agent load handler. A client plug-in that contributes to the extension
- * point <tt>org.jvmmonitor.core.agentLoadHandler</tt> will implement this
- * interface.
+ * The agent load handler.
  */
 public interface IAgentLoadHandler {
 

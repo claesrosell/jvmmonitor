@@ -13,10 +13,13 @@ import java.util.Map.Entry;
 
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IStatusLineManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -28,6 +31,7 @@ import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.dialogs.FilteredTree;
 import org.eclipse.ui.dialogs.PatternFilter;
+import org.jvmmonitor.core.IThreadElement;
 import org.jvmmonitor.internal.ui.IConfigurableColumns;
 import org.jvmmonitor.internal.ui.actions.ConfigureColumnsAction;
 import org.jvmmonitor.internal.ui.actions.CopyAction;
@@ -38,6 +42,9 @@ import org.jvmmonitor.ui.Activator;
  */
 public class ThreadFilteredTree extends FilteredTree implements
         IConfigurableColumns, IPropertyChangeListener {
+
+    /** The action bars. */
+    private final IActionBars actionBars;
 
     /** The columns with visibility state. */
     private LinkedHashMap<String, Boolean> columns;
@@ -56,6 +63,7 @@ public class ThreadFilteredTree extends FilteredTree implements
     protected ThreadFilteredTree(Composite parent, IActionBars actionBars) {
         super(parent, SWT.MULTI | SWT.FULL_SELECTION, new PatternFilter(), true);
 
+        this.actionBars = actionBars;
         loadColumnsPreference();
         configureTree();
         createContextMenu(actionBars);
@@ -138,6 +146,32 @@ public class ThreadFilteredTree extends FilteredTree implements
                 .removePropertyChangeListener(this);
     }
 
+    void updateStatusLine(IStructuredSelection selection) {
+        IStatusLineManager manager = actionBars.getStatusLineManager();
+
+        // set text on status line
+        for (Object object : selection.toArray()) {
+            if (!(object instanceof IThreadElement)) {
+                continue;
+            }
+
+            String schedulingRulesSeparatedByComma = ((IThreadElement) object).getSchedulingRules();
+            if (!schedulingRulesSeparatedByComma.isEmpty()) {
+                String text;
+                if (schedulingRulesSeparatedByComma.contains(", ")) { //$NON-NLS-1$
+                    text = NLS.bind(Messages.schedulingRulesMsg, schedulingRulesSeparatedByComma);
+                } else {
+                    text = NLS.bind(Messages.schedulingRuleMsg, schedulingRulesSeparatedByComma);
+                }
+                manager.setMessage(text);
+                return;
+            }
+        }
+
+        // clear the status line
+        manager.setMessage(null);
+    }
+    
     /**
      * Loads the columns preference.
      */

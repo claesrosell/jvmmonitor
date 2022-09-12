@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2010 JVM Monitor project. All rights reserved. 
- * 
+ * Copyright (c) 2010 JVM Monitor project. All rights reserved.
+ *
  * This code is distributed under the terms of the Eclipse Public License v1.0
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
@@ -16,7 +16,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TreeSelection;
@@ -28,10 +27,8 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.views.properties.PropertySheet;
-import org.eclipse.ui.views.properties.PropertyShowInContext;
 import org.jvmmonitor.core.IActiveJvm;
 import org.jvmmonitor.core.JvmCoreException;
-import org.jvmmonitor.internal.ui.IConstants;
 import org.jvmmonitor.ui.Activator;
 import org.jvmmonitor.ui.ISharedImages;
 
@@ -51,7 +48,7 @@ public class StartMonitoringAction extends Action implements
      * The constructor.
      */
     public StartMonitoringAction() {
-        jvms = new CopyOnWriteArrayList<IActiveJvm>();
+        jvms = new CopyOnWriteArrayList<>();
         visible = false;
 
         setText(Messages.startMonitoringLabel);
@@ -107,10 +104,7 @@ public class StartMonitoringAction extends Action implements
 
                     if (!jvm.isConnected() && isEnabled()) {
                         try {
-                            int period = Activator.getDefault()
-                                    .getPreferenceStore()
-                                    .getInt(IConstants.UPDATE_PERIOD);
-                            jvm.connect(period);
+                            jvm.connect();
                         } catch (JvmCoreException e) {
                             Activator.log(
                                     NLS.bind(Messages.connectJvmFailedMsg,
@@ -139,7 +133,7 @@ public class StartMonitoringAction extends Action implements
 
     /**
      * Shows the properties view.
-     * 
+     *
      * @param jvm
      *            The active JVM
      */
@@ -156,14 +150,14 @@ public class StartMonitoringAction extends Action implements
             // check if there is a corresponding properties view
             PropertySheet view = getPropertiesView(jvm, views);
             if (view != null) {
-                brindPropertiesViewToFront(view);
+                bringPropertiesViewToFront(view);
                 return;
             }
 
             // check if there is non-pinned properties view
             view = getNonPinnedPropertiesView(views);
             if (view != null) {
-                brindPropertiesViewToFront(view);
+                bringPropertiesViewToFront(view);
                 return;
             }
 
@@ -177,7 +171,7 @@ public class StartMonitoringAction extends Action implements
 
     /**
      * Gets the state indicating if this action is visible.
-     * 
+     *
      * @return <tt>true</tt> if this action is visible
      */
     protected boolean getVisible() {
@@ -186,11 +180,11 @@ public class StartMonitoringAction extends Action implements
 
     /**
      * Gets the currently opened properties view.
-     * 
+     *
      * @return The properties views
      */
     private static List<PropertySheet> getProperriesView() {
-        List<PropertySheet> list = new ArrayList<PropertySheet>();
+        List<PropertySheet> list = new ArrayList<>();
 
         IViewReference[] views = PlatformUI.getWorkbench()
                 .getActiveWorkbenchWindow().getActivePage().getViewReferences();
@@ -205,22 +199,18 @@ public class StartMonitoringAction extends Action implements
     /**
      * Gets the properties view showing the given JVM from the given properties
      * views.
-     * 
+     *
      * @param jvm
      *            The JVM
      * @param views
      *            The properties views
      * @return The properties view
      */
-    private static PropertySheet getPropertiesView(IActiveJvm jvm,
-            List<PropertySheet> views) {
+    private static PropertySheet getPropertiesView(IActiveJvm jvm, List<PropertySheet> views) {
         for (PropertySheet view : views) {
-            ISelection selection = view.getShowInContext().getSelection();
-            if (selection instanceof TreeSelection) {
-                Object element = ((TreeSelection) selection).getFirstElement();
-                if (jvm.equals(element)) {
-                    return view;
-                }
+            IActiveJvm selectedJvm = ((JvmTabbedPropertySheetPage) view.getCurrentPage()).getJvm();
+            if (jvm.equals(selectedJvm)) {
+                return view;
             }
         }
         return null;
@@ -228,7 +218,7 @@ public class StartMonitoringAction extends Action implements
 
     /**
      * Gets the non-pinned properties view.
-     * 
+     *
      * @param views
      *            The properties view
      * @return The non-pinned properties view
@@ -244,7 +234,7 @@ public class StartMonitoringAction extends Action implements
 
     /**
      * Opens the properties view.
-     * 
+     *
      * @param jvm
      *            The JVM
      * @throws PartInitException
@@ -258,26 +248,22 @@ public class StartMonitoringAction extends Action implements
                         String.valueOf(new Date().getTime()),
                         IWorkbenchPage.VIEW_ACTIVATE);
 
-        // make sure to set the selection as an identifier of view
-        PropertyShowInContext context = (PropertyShowInContext) view
-                .getShowInContext();
-        if (context.getSelection() == null) {
-            JvmExplorer jvmExplorer = (JvmExplorer) context.getPart();
-            view.selectionChanged(jvmExplorer, jvmExplorer.getSelection());
-        }
+        ((JvmTabbedPropertySheetPage) view.getCurrentPage()).setJvm(jvm);
+        view.setPinned(true);
     }
 
     /**
      * Brings the properties view to front.
-     * 
+     *
      * @param view
      *            The properties view
      * @throws PartInitException
      */
-    private static void brindPropertiesViewToFront(PropertySheet view)
+    private static void bringPropertiesViewToFront(PropertySheet view)
             throws PartInitException {
         PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
                 .bringToTop(view);
+        view.setFocus();
         view.setPinned(true);
     }
 }

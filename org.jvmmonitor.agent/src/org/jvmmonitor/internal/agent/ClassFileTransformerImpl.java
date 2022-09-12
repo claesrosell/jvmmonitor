@@ -11,8 +11,8 @@ import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 import java.util.Set;
 
-import org.jvmmonitor.internal.agent.asm.ClassAdapter;
 import org.jvmmonitor.internal.agent.asm.ClassReader;
+import org.jvmmonitor.internal.agent.asm.ClassVisitor;
 import org.jvmmonitor.internal.agent.asm.ClassWriter;
 
 /**
@@ -66,7 +66,7 @@ public class ClassFileTransformerImpl implements ClassFileTransformer {
 
         ClassReader reader = new ClassReader(classfileBuffer);
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-        ClassAdapter visitor = new ClassVisitorImpl(writer, className);
+        ClassVisitor visitor = new ClassVisitorImpl(writer, className);
         reader.accept(visitor, ClassReader.SKIP_DEBUG);
 
         return writer.toByteArray();

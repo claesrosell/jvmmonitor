@@ -23,7 +23,7 @@ public class NotificationComparator extends ViewerComparator {
     private int sortDirection;
 
     /** the column index */
-    private int columnIndex;
+    private final int columnIndex;
 
     /**
      * The constructor.
@@ -56,14 +56,17 @@ public class NotificationComparator extends ViewerComparator {
             result = super.compare(treeViewer, element1.getMessage(), element2
                     .getMessage());
         } else if (columnIndex == getColumnIndex(tree, NotificationColumn.DATE)) {
-            result = element1.getTimeStamp() > element2.getTimeStamp() ? 1 : -1;
+            long timeStamp1 = element1.getTimeStamp();
+            long timeStamp2 = element2.getTimeStamp();
+            result = Long.compare(timeStamp1, timeStamp2);
         } else if (columnIndex == getColumnIndex(tree, NotificationColumn.TYPE)) {
             result = super.compare(treeViewer, element1.getType(), element2
                     .getType());
         } else if (columnIndex == getColumnIndex(tree,
                 NotificationColumn.SEQUENCE_NUMBER)) {
-            result = element1.getSequenceNumber() > element2
-                    .getSequenceNumber() ? 1 : -1;
+            long number1 = element1.getSequenceNumber();
+            long number2 = element2.getSequenceNumber();
+            result = Long.compare(number1, number2);
         }
     
         if (sortDirection == SWT.DOWN) {

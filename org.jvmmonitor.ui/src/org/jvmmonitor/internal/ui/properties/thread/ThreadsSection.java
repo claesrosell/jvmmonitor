@@ -1,60 +1,43 @@
 /*******************************************************************************
- * Copyright (c) 2010 JVM Monitor project. All rights reserved. 
- * 
+ * Copyright (c) 2010 JVM Monitor project. All rights reserved.
+ *
  * This code is distributed under the terms of the Eclipse Public License v1.0
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
 package org.jvmmonitor.internal.ui.properties.thread;
 
-import static org.jvmmonitor.internal.ui.IConstants.*;
-
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
-import org.eclipse.jface.action.MenuManager;
-import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.osgi.util.NLS;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PlatformUI;
 import org.jvmmonitor.core.IActiveJvm;
+import org.jvmmonitor.core.IEclipseJobElement;
 import org.jvmmonitor.core.IThreadElement;
-import org.jvmmonitor.core.JvmCoreException;
 import org.jvmmonitor.internal.ui.IHelpContextIds;
 import org.jvmmonitor.internal.ui.RefreshJob;
-import org.jvmmonitor.internal.ui.actions.RefreshAction;
-import org.jvmmonitor.internal.ui.actions.ToggleOrientationAction;
 import org.jvmmonitor.internal.ui.properties.AbstractJvmPropertySection;
-import org.jvmmonitor.ui.Activator;
+import org.jvmmonitor.internal.ui.properties.memory.Messages;
 
 /**
  * The thread section.
  */
 public class ThreadsSection extends AbstractJvmPropertySection {
 
-    /** The layout menu id. */
-    private static final String LAYOUT_MENU_ID = "layout"; //$NON-NLS-1$
+    private int defaultTabHeight;
 
-    /** The sash form. */
-    ThreadSashForm sashForm;
+    private ThreadsPage threadsPage;
 
-    /** The action to dump threads. */
-    DumpThreadsAction dumpThreadsAction;
+    private EclipseJobsPage jobsPage;
 
-    /** The action to refresh section. */
-    RefreshAction refreshAction;
-
-    /** The layout menu. */
-    private MenuManager layoutMenu;
-
-    /**
-     * The constructor.
-     */
-    public ThreadsSection() {
-        createActions();
-    }
+    private CTabFolder tabFolder;
 
     /*
      * @see AbstractPropertySection#refresh()
@@ -65,34 +48,8 @@ public class ThreadsSection extends AbstractJvmPropertySection {
             return;
         }
 
-        new RefreshJob(NLS.bind(Messages.refreshThreadsSectionJobLabel,
-                getJvm().getPid()), toString()) {
-
-            @Override
-            protected void refreshModel(IProgressMonitor monitor) {
-                IActiveJvm jvm = getJvm();
-                if (jvm != null && jvm.isConnected() && !isRefreshSuspended()) {
-                    try {
-                        jvm.getMBeanServer().refreshThreadCache();
-                    } catch (JvmCoreException e) {
-                        Activator.log(null, e);
-                    }
-                }
-            }
-
-            @Override
-            protected void refreshUI() {
-                IActiveJvm jvm = getJvm();
-                boolean isConnected = jvm != null && jvm.isConnected();
-                dumpThreadsAction.setEnabled(!hasErrorMessage());
-                refreshAction.setEnabled(isConnected);
-
-                if (sashForm != null && !sashForm.isDisposed()) {
-                    refreshBackground(sashForm.getChildren(), isConnected);
-                    sashForm.refresh();
-                }
-            }
-        }.schedule();
+        threadsPage.refresh();
+        jobsPage.refresh();
     }
 
     /*
@@ -100,7 +57,21 @@ public class ThreadsSection extends AbstractJvmPropertySection {
      */
     @Override
     protected void createControls(Composite parent) {
-        sashForm = new ThreadSashForm(parent, getActionBars());
+        tabFolder = getWidgetFactory().createTabFolder(parent,
+                SWT.BOTTOM | SWT.FLAT);
+
+        tabFolder.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                clearStatusLine();
+            }
+        });
+
+        threadsPage = new ThreadsPage(this, tabFolder, getActionBars());
+        jobsPage = new EclipseJobsPage(this, tabFolder, getActionBars());
+
+        defaultTabHeight = tabFolder.getTabHeight();
+        tabFolder.setTabHeight(0);
 
         PlatformUI.getWorkbench().getHelpSystem()
                 .setHelp(parent, IHelpContextIds.THREADS_PAGE);
@@ -113,10 +84,19 @@ public class ThreadsSection extends AbstractJvmPropertySection {
     @Override
     protected void setInput(IWorkbenchPart part, ISelection selection,
             final IActiveJvm newJvm, IActiveJvm oldJvm) {
-        sashForm.setInput(new IThreadInput() {
+        updateTabHeight(newJvm);
+
+        threadsPage.setInput(new IThreadInput() {
             @Override
             public IThreadElement[] getThreadListElements() {
                 return newJvm.getMBeanServer().getThreadCache();
+            }
+        });
+
+        jobsPage.setInput(new IEclipseJobInput() {
+            @Override
+            public IEclipseJobElement[] getEclipseJobElements() {
+                return newJvm.getMBeanServer().getEclipseJobCache();
             }
         });
     }
@@ -126,14 +106,10 @@ public class ThreadsSection extends AbstractJvmPropertySection {
      */
     @Override
     protected void addToolBarActions(IToolBarManager manager) {
-        if (manager.find(SEPARATOR_ID) == null) {
-            manager.add(new Separator(SEPARATOR_ID));
-        }
-        if (manager.find(refreshAction.getId()) == null) {
-            manager.insertAfter(SEPARATOR_ID, refreshAction);
-        }
-        if (manager.find(dumpThreadsAction.getId()) == null) {
-            manager.insertAfter(SEPARATOR_ID, dumpThreadsAction);
+        if (tabFolder.getSelectionIndex() == 0) {
+            threadsPage.addToolBarActions(manager);
+        } else {
+            jobsPage.addToolBarActions(manager);
         }
     }
 
@@ -142,9 +118,11 @@ public class ThreadsSection extends AbstractJvmPropertySection {
      */
     @Override
     protected void removeToolBarActions(IToolBarManager manager) {
-        manager.remove(SEPARATOR_ID);
-        manager.remove(refreshAction.getId());
-        manager.remove(dumpThreadsAction.getId());
+        if (tabFolder.getSelectionIndex() == 0) {
+            threadsPage.removeToolBarActions(manager);
+        } else {
+            jobsPage.removeToolBarActions(manager);
+        }
     }
 
     /*
@@ -152,14 +130,10 @@ public class ThreadsSection extends AbstractJvmPropertySection {
      */
     @Override
     protected void addLocalMenus(IMenuManager manager) {
-        if (manager.find(layoutMenu.getId()) == null) {
-            manager.add(layoutMenu);
-            for (ToggleOrientationAction action : sashForm
-                    .getOrientationActions()) {
-                if (layoutMenu.find(action.getId()) == null) {
-                    layoutMenu.add(action);
-                }
-            }
+        if (tabFolder.getSelectionIndex() == 0) {
+            threadsPage.addLocalMenus(manager);
+        } else {
+            jobsPage.addLocalMenus(manager);
         }
     }
 
@@ -168,7 +142,21 @@ public class ThreadsSection extends AbstractJvmPropertySection {
      */
     @Override
     protected void removeLocalMenus(IMenuManager manager) {
-        manager.remove(layoutMenu);
+        if (tabFolder.getSelectionIndex() == 0) {
+            threadsPage.removeLocalMenus(manager);
+        } else {
+            jobsPage.removeLocalMenus(manager);
+        }
+    }
+
+    /*
+     * @see AbstractJvmPropertySection#activateSection()
+     */
+    @Override
+    protected void activateSection() {
+        super.activateSection();
+        threadsPage.updateLocalToolBar(tabFolder.getSelectionIndex() == 0);
+        jobsPage.updateLocalToolBar(tabFolder.getSelectionIndex() == 1);
     }
 
     /*
@@ -177,15 +165,32 @@ public class ThreadsSection extends AbstractJvmPropertySection {
     @Override
     protected void deactivateSection() {
         super.deactivateSection();
-        Job.getJobManager().cancel(toString());
+        threadsPage.deactivated();
+        jobsPage.deactivated();
     }
 
-    /**
-     * Creates the actions.
-     */
-    private void createActions() {
-        dumpThreadsAction = new DumpThreadsAction(this);
-        refreshAction = new RefreshAction(this);
-        layoutMenu = new MenuManager(Messages.layoutLabel, LAYOUT_MENU_ID);
+    private void updateTabHeight(final IActiveJvm jvm) {
+        new RefreshJob(NLS.bind(Messages.refreshMemorySectionJobLabel,
+                jvm.getPid()), toString()) {
+            private boolean isSupported;
+
+            @Override
+            protected void refreshModel(IProgressMonitor monitor) {
+                isSupported = jvm.getSWTResourceMonitor().isSupported();
+            }
+
+            @Override
+            protected void refreshUI() {
+                int tabHeight;
+                if (isSupported) {
+                    tabHeight = defaultTabHeight;
+                } else {
+                    tabHeight = 0;
+                    tabFolder.setSelection(0);
+                }
+                tabFolder.setTabHeight(tabHeight);
+                tabFolder.layout();
+            }
+        }.schedule();
     }
 }

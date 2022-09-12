@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2010 JVM Monitor project. All rights reserved. 
- * 
+ * Copyright (c) 2010 JVM Monitor project. All rights reserved.
+ *
  * This code is distributed under the terms of the Eclipse Public License v1.0
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
@@ -13,24 +13,6 @@ import org.jvmmonitor.ui.Activator;
  */
 @SuppressWarnings("nls")
 public interface IConstants {
-
-    /** The preference key for legend visibility. */
-    static final String LEGEND_VISIBILITY = "LegendVisibility";
-
-    /** The preference key for update period. */
-    static final String UPDATE_PERIOD = "UpdatePeriod";
-
-    /** The preference key for threads filter to take stack traces into account. */
-    static final String WIDE_SCOPE_THREAD_FILTER = "WideScopeThreadFilter";
-
-    /** The preference key for SWT resources filter to take stack traces into account. */
-    static final String WIDE_SCOPE_SWT_RESOURCE_FILTER = "WideScopeSWTResourcesFilter";
-
-    /** The preference key for default chart set. */
-    static final String DEFAULT_CHART_SET = "DefaultChartSet";
-
-    /** The preference key for chart sets. */
-    static final String CHART_SETS = "ChartSets";
 
     /** The memento key for chart set. */
     static final String CHART_SET = "ChartSet";

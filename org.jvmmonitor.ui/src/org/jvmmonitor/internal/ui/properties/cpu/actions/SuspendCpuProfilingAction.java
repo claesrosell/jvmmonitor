@@ -56,7 +56,9 @@ public class SuspendCpuProfilingAction extends AbstractCpuProfilingAction {
             Activator.log(Messages.suspendingCpuProfilingFailedMsg, e);
         }
 
-        resumeAction.setEnabled(true);
+        if (resumeAction != null) {
+            resumeAction.setEnabled(true);
+        }
 
         return Status.OK_STATUS;
     }

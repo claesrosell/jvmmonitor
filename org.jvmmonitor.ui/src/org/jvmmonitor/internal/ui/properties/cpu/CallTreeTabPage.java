@@ -94,6 +94,10 @@ public class CallTreeTabPage extends AbstractTabPage {
      */
     @Override
     protected void refresh() {
+        if (!isVisible()) {
+            return;
+        }
+
         if (!filteredTree.getViewer().getControl().isDisposed()) {
             filteredTree.getViewer().refresh();
             filteredTree.updateStatusLine((IStructuredSelection) filteredTree

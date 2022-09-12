@@ -9,6 +9,7 @@ package org.jvmmonitor.internal.core;
 import java.lang.Thread.State;
 import java.lang.management.ThreadInfo;
 
+import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.jvmmonitor.core.IThreadElement;
 
 /**
@@ -34,10 +35,10 @@ public class ThreadElement implements IThreadElement {
     /** The waited count. */
     private long waitedCount;
 
-    /** The locked name. */
+    /** The lock that this thread is waiting for. */
     private String lockName;
 
-    /** The lock owner name. */
+    /** The thread that owns the lock this thread is waiting for. */
     private String lockOwnerName;
 
     /** The stack trace elements. */
@@ -51,6 +52,15 @@ public class ThreadElement implements IThreadElement {
 
     /** The CPU usage in percentage. */
     private double cpuUsage;
+
+    /** The scheduling rule {@link ISchedulingRule} that this thread is waiting for. */
+    private String schedulingRuleName;
+
+    /** The thread that holds the scheduling rule {@link ISchedulingRule} this thread is waiting for. */
+    private String schedulingRuleOwnerName;
+
+    /** The scheduling rules {@link ISchedulingRule} that this thread holds. */
+    private String[] heldSchedulingRuleNames;
 
     /**
      * The constructor.
@@ -94,11 +104,16 @@ public class ThreadElement implements IThreadElement {
      *            True if the thread is in deadlock
      * @param cpuUsage
      *            The CPU usage
+     * @param schedulingRuleName
+     *             The scheduling rule {@link ISchedulingRule} that this thread is waiting for
+     * @param schedulingRuleOwnerName
+     *            The name of thread that holds the scheduling rule {@link ISchedulingRule} this thread is waiting for
+     * @param holdingSchedulingRules
+     *             The scheduling rule {@link ISchedulingRule} that this thread holds
      */
-    public ThreadElement(String threadName, State threadState,
-            long blockedTime, long blockedCount, long waitedTime,
-            long waitedCount, String lockName, String lockOwnerName,
-            boolean isSuspended, boolean isDeadlocked, double cpuUsage) {
+    public ThreadElement(String threadName, State threadState, long blockedTime, long blockedCount, long waitedTime,
+            long waitedCount, String lockName, String lockOwnerName, boolean isSuspended, boolean isDeadlocked,
+            double cpuUsage, String schedulingRuleName, String schedulingRuleOwnerName, String[] holdingSchedulingRules) {
         this.threadName = threadName;
         this.threadState = threadState;
         this.blockedTime = blockedTime;
@@ -110,6 +125,9 @@ public class ThreadElement implements IThreadElement {
         this.isSuspended = isSuspended;
         this.isDeadlocked = isDeadlocked;
         this.cpuUsage = cpuUsage;
+        this.schedulingRuleName = schedulingRuleName;
+        this.schedulingRuleOwnerName = schedulingRuleOwnerName;
+        this.heldSchedulingRuleNames = holdingSchedulingRules;
     }
 
     /*
@@ -165,6 +183,9 @@ public class ThreadElement implements IThreadElement {
      */
     @Override
     public String getLockName() {
+        if (schedulingRuleName != null) {
+            return schedulingRuleName + " (ISchedulingRule)"; //$NON-NLS-1$
+        }
         return lockName == null ? "" : lockName; //$NON-NLS-1$
     }
 
@@ -173,7 +194,10 @@ public class ThreadElement implements IThreadElement {
      */
     @Override
     public String getLockOwnerName() {
-        return lockOwnerName == null ? "" : lockOwnerName; //$NON-NLS-1$
+        if (lockOwnerName != null) {
+            return lockOwnerName;
+        }
+        return schedulingRuleOwnerName == null ? "" : schedulingRuleOwnerName; //$NON-NLS-1$
     }
 
     /*
@@ -206,6 +230,11 @@ public class ThreadElement implements IThreadElement {
     @Override
     public double getCpuUsage() {
         return cpuUsage;
+    }
+
+    @Override
+    public String getSchedulingRules() {
+        return toStringSeparatedByComma(heldSchedulingRuleNames);
     }
 
     /**
@@ -258,24 +287,79 @@ public class ThreadElement implements IThreadElement {
     }
 
     /**
+     * Sets the name of scheduling rule {@link ISchedulingRule} that this thread is
+     * waiting for.
+     * 
+     * @param schedulingRuleName The name of scheduling rule {@link ISchedulingRule}
+     *                           that this thread is waiting for
+     */
+    public void setSchedulingRuleName(String schedulingRuleName) {
+        this.schedulingRuleName = schedulingRuleName;
+    }
+
+    /**
+     * Sets the name of thread that holds the scheduling rule
+     * {@link ISchedulingRule} this thread is waiting for.
+     * 
+     * @param schedulingRuleOwnerName The name of thread that holds the scheduling
+     *                                rule {@link ISchedulingRule} this thread is
+     *                                waiting for
+     */
+    public void setSchedulingRuleOwnerName(String schedulingRuleOwnerName) {
+        this.schedulingRuleOwnerName = schedulingRuleOwnerName;
+    }
+
+    /**
+     * Sets the scheduling rules {@link ISchedulingRule} that this thread holds.
+     * 
+     * @param heldSchedulingRuleNames The scheduling rules {@link ISchedulingRule}
+     *                                held by this thread
+     */
+    public void setHeldSchedulingRules(String[] heldSchedulingRuleNames) {
+        this.heldSchedulingRuleNames = heldSchedulingRuleNames;
+    }
+
+    /**
+     * Gets the name of scheduling rule {@link ISchedulingRule} that this thread is
+     * waiting for.
+     * 
+     * @return The name of scheduling rule {@link ISchedulingRule} that this thread
+     *         is waiting for
+     */
+    public String getSchedulingRuleName() {
+        return schedulingRuleName;
+    }
+
+    /**
      * Dumps the thread data to given string buffer.
      * 
      * @param buffer
      *            The string buffer
      */
     public void dump(StringBuffer buffer) {
-        buffer.append("\t<thread "); //$NON-NLS-1$
-        buffer.append("name=\"").append(threadName).append("\" "); //$NON-NLS-1$ //$NON-NLS-2$
-        buffer.append("state=\"").append(threadState).append("\" "); //$NON-NLS-1$ //$NON-NLS-2$
-        buffer.append("blockedTime=\"").append(blockedTime).append("\" "); //$NON-NLS-1$ //$NON-NLS-2$
-        buffer.append("blockedCount=\"").append(blockedCount).append("\" "); //$NON-NLS-1$ //$NON-NLS-2$
-        buffer.append("waitedTime=\"").append(waitedTime).append("\" "); //$NON-NLS-1$ //$NON-NLS-2$
-        buffer.append("waitedCount=\"").append(waitedCount).append("\" "); //$NON-NLS-1$ //$NON-NLS-2$
-        buffer.append("lock=\"").append(getLockName()).append("\" "); //$NON-NLS-1$ //$NON-NLS-2$
-        buffer.append("lockOwner=\"").append(getLockOwnerName()).append("\" "); //$NON-NLS-1$ //$NON-NLS-2$
-        buffer.append("suspended=\"").append(isSuspended).append("\" "); //$NON-NLS-1$ //$NON-NLS-2$
-        buffer.append("deadlocked=\"").append(isDeadlocked).append("\" "); //$NON-NLS-1$ //$NON-NLS-2$
-        buffer.append("cpuUsage=\"").append(cpuUsage).append("\">\n"); //$NON-NLS-1$ //$NON-NLS-2$
+        buffer.append("\t<thread"); //$NON-NLS-1$
+        buffer.append(" name=\"").append(threadName).append('"'); //$NON-NLS-1$ 
+        buffer.append(" state=\"").append(threadState).append('"'); //$NON-NLS-1$ 
+        buffer.append(" blockedTime=\"").append(blockedTime).append('"'); //$NON-NLS-1$ 
+        buffer.append(" blockedCount=\"").append(blockedCount).append('"'); //$NON-NLS-1$ 
+        buffer.append(" waitedTime=\"").append(waitedTime).append('"'); //$NON-NLS-1$ 
+        buffer.append(" waitedCount=\"").append(waitedCount).append('"'); //$NON-NLS-1$ 
+        buffer.append(" lock=\"").append(getLockName()).append('"'); //$NON-NLS-1$
+        buffer.append(" lockOwner=\"").append(getLockOwnerName()).append('"'); //$NON-NLS-1$
+        buffer.append(" suspended=\"").append(isSuspended).append('"'); //$NON-NLS-1$
+        buffer.append(" deadlocked=\"").append(isDeadlocked).append('"'); //$NON-NLS-1$
+        buffer.append(" cpuUsage=\"").append(cpuUsage).append('"'); //$NON-NLS-1$
+        if (schedulingRuleName != null) {
+            buffer.append(" schedulingRuleName=\"").append(schedulingRuleName).append('"'); //$NON-NLS-1$
+        }
+        if (schedulingRuleOwnerName != null) {
+            buffer.append(" schedulingRuleOwnerName=\"").append(schedulingRuleOwnerName).append('"'); //$NON-NLS-1$
+        }
+        if (heldSchedulingRuleNames != null) {
+            buffer.append(" heldSchedulingRuleNames=\"").append(toStringSeparatedByComma(heldSchedulingRuleNames)) //$NON-NLS-1$
+                    .append('"');
+        }
+        buffer.append(">\n"); //$NON-NLS-1$
 
         for (StackTraceElement element : stackTraceElements) {
             buffer.append("\t\t<frame "); //$NON-NLS-1$
@@ -308,5 +392,20 @@ public class ThreadElement implements IThreadElement {
         buffer.append(getLockName()).append('\t');
         buffer.append(getLockOwnerName() != null ? getLockOwnerName() : ""); //$NON-NLS-1$
         return buffer.toString();
+    }
+
+    private static String toStringSeparatedByComma(String[] strings) {
+        if (strings == null) {
+            return "";//$NON-NLS-1$
+        }
+
+        StringBuilder builder = new StringBuilder();
+        for (String string : strings) {
+            if (builder.length() > 0) {
+                builder.append(',').append(' ');
+            }
+            builder.append(string);
+        }
+        return builder.toString();
     }
 }

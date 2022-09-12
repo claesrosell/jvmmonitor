@@ -22,7 +22,7 @@ public class ThreadComparator extends ViewerComparator {
     private int sortDirection;
 
     /** the column index */
-    private int columnIndex;
+    private final int columnIndex;
 
     /**
      * The constructor.
@@ -70,26 +70,26 @@ public class ThreadComparator extends ViewerComparator {
             }
             result = super.compare(treeViewer, state1, state2);
         } else if (columnIndex == getColumnIndex(tree, ThreadColumn.CPU)) {
-            result = (element1.getCpuUsage() > element2.getCpuUsage()) ? 1 : -1;
+            result = Double.compare(element1.getCpuUsage(), element2.getCpuUsage());
         } else if (columnIndex == getColumnIndex(tree,
                 ThreadColumn.BLOCKED_TIME)) {
             long time1 = element1.getBlockedTime();
             long time2 = element2.getBlockedTime();
-            result = (time1 > time2) ? 1 : -1;
+            result = Long.compare(time1, time2);
         } else if (columnIndex == getColumnIndex(tree,
                 ThreadColumn.BLOCKED_COUNT)) {
             long count1 = element1.getBlockedCount();
             long count2 = element2.getBlockedCount();
-            result = (count1 > count2) ? 1 : -1;
+            result = Long.compare(count1, count2);
         } else if (columnIndex == getColumnIndex(tree, ThreadColumn.WAITED_TIME)) {
             long time1 = element1.getWaitedTime();
             long time2 = element2.getWaitedTime();
-            result = (time1 > time2) ? 1 : -1;
+            result = Long.compare(time1, time2);
         } else if (columnIndex == getColumnIndex(tree,
                 ThreadColumn.WAITED_COUNT)) {
             long count1 = element1.getWaitedCount();
             long count2 = element2.getWaitedCount();
-            result = (count1 > count2) ? 1 : -1;
+            result = Long.compare(count1, count2);
         } else if (columnIndex == getColumnIndex(tree, ThreadColumn.LOCK)) {
             result = super.compare(treeViewer, element1.getLockName(), element2
                     .getLockName());

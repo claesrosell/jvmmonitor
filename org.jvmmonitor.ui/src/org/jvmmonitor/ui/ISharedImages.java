@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2010 JVM Monitor project. All rights reserved. 
- * 
+ * Copyright (c) 2010 JVM Monitor project. All rights reserved.
+ *
  * This code is distributed under the terms of the Eclipse Public License v1.0
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
@@ -29,6 +29,12 @@ public interface ISharedImages {
 
     /** The thread object image path. */
     public static final String THREAD_IMG_PATH = "icons/full/obj16/thread_obj.gif";//$NON-NLS-1$
+
+    /** The running job object image path. */
+    public static final String RUNNING_JOB_IMG_PATH = "icons/full/obj16/running_job_obj.png";//$NON-NLS-1$
+
+    /** The not-running job object image path. */
+    public static final String NOT_RUNNING_JOB_IMG_PATH = "icons/full/obj16/not_running_job_obj.png";//$NON-NLS-1$
 
     /** The thread runnable object image path. */
     public static final String THREAD_RUNNABLE_IMG_PATH = "icons/full/obj16/thread_runnable_obj.gif";//$NON-NLS-1$
